@@ -4,11 +4,13 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import me.ariy.mydex.data.myteam.MyTeamEntity
 import me.ariy.mydex.data.pokemon.PokemonEntity
 
-@Database(entities = [PokemonEntity::class], version = 1)
+@Database(entities = [PokemonEntity::class, MyTeamEntity::class], version = 1)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun pokemonDao(): me.ariy.mydex.data.pokemon.PokemonDao
+    abstract fun myteamDao(): me.ariy.mydex.data.myteam.MyTeamDao
 
     companion object {
         private var INSTANCE: AppDatabase? = null
@@ -22,7 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
             // So we use this method, 'synchronized' to lock the instance
             synchronized(lock) {
                 if (INSTANCE == null) {
-                    INSTANCE = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "mydex.db").build()
+                    INSTANCE = Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, "mydex.db").allowMainThreadQueries().build()
                 }
                 return INSTANCE!!
             }
