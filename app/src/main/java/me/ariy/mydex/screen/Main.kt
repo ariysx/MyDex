@@ -36,8 +36,10 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.google.accompanist.flowlayout.FlowRow
 import me.ariy.mydex.BottomBarNavGraph
 import me.ariy.mydex.BottomBarScreen
+import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.data.pokemon.PokemonRepository
@@ -55,20 +57,22 @@ fun MyDexApp(
     val context = LocalContext.current
     thread {
         println("${Thread.currentThread()} has run.")
-        PokemonRepository.syncCloud(context, viewModel)
+        if(viewModel != null){
+            PokemonRepository.syncCloud(context, viewModel)
+        }
     }
 
     Scaffold()
     {
+
         SearchBarApp(onCloseClicked = {
-            PokemonRepository.loadLocal(context, viewModel)
+            PokemonRepository.loadLocal(context, viewModel.pokemons)
         }, onSearchClicked = {
             var query = it.lowercase()
             var type: String = ""
             when(query) {
                 "normal" -> type = "normal"
                 "fire" -> type = "fire"
-                "water" -> type = "water"
                 "water" -> type = "water"
                 "electric" -> type = "electric"
                 "ice" -> type = "ice"
@@ -230,7 +234,7 @@ fun PokemonInformation(name: String, type: String, modifier: Modifier = Modifier
             style = MaterialTheme.typography.h6,
             modifier = modifier.padding(top = 8.dp)
         )
-        Row() {
+        FlowRow() {
             for (i in 0 until ListTypeConverter.stringToList(type).size) {
                 TypeBadge(text = ListTypeConverter.stringToList(type)[i], color = Color.Gray)
             }
@@ -360,7 +364,9 @@ fun BottomBar(navController: NavHostController) {
     val screens = listOf(
         BottomBarScreen.home,
         BottomBarScreen.team,
-        BottomBarScreen.settings
+        BottomBarScreen.compare,
+        BottomBarScreen.statistic,
+        BottomBarScreen.settings,
     )
     val navBackstackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackstackEntry?.destination

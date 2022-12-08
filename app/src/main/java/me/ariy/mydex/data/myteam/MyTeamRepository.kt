@@ -9,13 +9,18 @@ object MyTeamRepository {
         val pokemondb = AppDatabase.getInstance(context).pokemonDao()
         val myteamdb = AppDatabase.getInstance(context).myteamDao()
 
-        for (pokemon in myteamdb.getAll()) {
-            viewModel.addPokemon(pokemondb.findByName(pokemon.uuid))
+        for (team in myteamdb.getAll()) {
+            viewModel.addTeam(team)
         }
     }
 
-    fun remove(viewModel: MyTeamViewModel, context: Context, pokemonEntity: PokemonEntity){
-        viewModel.removePokemon(pokemonEntity)
-        AppDatabase.getInstance(context).myteamDao().deleteOne(MyTeamEntity(pokemonEntity.uuid))
+    fun remove(viewModel: MyTeamViewModel, context: Context, myTeamEntity: MyTeamEntity){
+        viewModel.removeTeam(myTeamEntity)
+        AppDatabase.getInstance(context).myteamDao().deleteOne(myTeamEntity)
+    }
+
+    fun add(viewModel: MyTeamViewModel, context: Context, myTeamEntity: MyTeamEntity) {
+        viewModel.addTeam(myTeamEntity)
+        AppDatabase.getInstance(context).myteamDao().insertOne(myTeamEntity)
     }
 }

@@ -2,39 +2,52 @@ package me.ariy.mydex.data.pokemon
 
 import android.content.Context
 import android.database.sqlite.SQLiteConstraintException
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.RESTUtils
 import okhttp3.OkHttpClient
-import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 
 object PokemonRepository {
-    fun loadLocal(context: Context, viewModel: PokemonViewModel) {
+    fun loadLocal(context: Context, pokemons: SnapshotStateList<PokemonEntity>){
         val db = AppDatabase.getInstance(context).pokemonDao()
-
-        println("ViewModel: " + (viewModel.pokemons.size+1) + " ~~ " + db.countPokemons())
-        if((viewModel.pokemons.size+1)!=db.countPokemons()){
-            viewModel.clear()
+        println("ViewModel: " + (pokemons.size) + " | " + db.countPokemons())
+        if((pokemons.size+1)!=db.countPokemons()){
+            pokemons.clear()
             for (pokemon in db.getAll()) {
-                viewModel.addPokemon(pokemon)
+                pokemons.add(pokemon)
             }
         } else {
-            viewModel.clear()
+            pokemons.clear()
         }
     }
+
+//    fun loadLocal(context: Context, viewModel: PokemonViewModel) {
+//        val db = AppDatabase.getInstance(context).pokemonDao()
+//
+//        println("ViewModel: " + (viewModel.pokemons.size+1) + " ~~ " + db.countPokemons())
+//        if((viewModel.pokemons.size+1)!=db.countPokemons()){
+//            viewModel.clear()
+//            for (pokemon in db.getAll()) {
+//                viewModel.addPokemon(pokemon)
+//            }
+//        } else {
+//            viewModel.clear()
+//        }
+//    }
 
     fun syncCloud(context: Context, viewModel: PokemonViewModel) {
         val db = AppDatabase.getInstance(context).pokemonDao()
 
-        if(db.getAll().isNotEmpty()){
-            loadLocal(context, viewModel)
+        if(db.getAll().isNotEmpty() && viewModel.pokemons.size == 0){
+            loadLocal(context, viewModel.pokemons)
         }
 
-        val url = "https://pokeapi.co/api/v2/pokemon-species?limit=151"
+        val url = "https://pokeapi.co/api/v2/pokemon-species?limit=-1"
         val client = OkHttpClient()
         val response = RESTUtils().get(client, url)
 
@@ -44,8 +57,8 @@ object PokemonRepository {
                 println("[PokeAPI] Count pokemons: " + api.get("count").toString())
                 println("[MyDex] Current Local Pokemons: " + (db.getAll().size))
 
-                if (151 == (db.getAll().size)) {
-//                if (api.get("count") == (db.getAll().size + 1)) {
+//                if (151 == (db.getAll().size)) {
+                if (api.get("count") == (db.getAll().size + 1)) {
                     println("[MyDex] No need to update pokemon to local database")
                     return
                 }
@@ -156,8 +169,15 @@ object PokemonRepository {
             try {
                 try {
                     // Second Evo
-                    val secondEvo = JSONObject(JSONArray(chain.get("evolves_to").toString()).getJSONObject(0).get("species").toString()).get("name")
-                    evolutions.add(secondEvo.toString())
+                    println("[Evolution] Second Evolution Length: " + JSONArray(chain.get("evolves_to").toString()).length())
+                    for(index in 0 until JSONArray(chain.get("evolves_to").toString()).length()){
+                        val secondEvo = JSONObject(JSONArray(chain.get("evolves_to").toString()).getJSONObject(index).get("species").toString()).get("name")
+                        println("[SECONDEVO] $secondEvo")
+                        evolutions.add(secondEvo.toString())
+                    }
+//
+//                    val secondEvo = JSONObject(JSONArray(chain.get("evolves_to").toString()).getJSONObject(0).get("species").toString()).get("name")
+//                    evolutions.add(secondEvo.toString())
                     try {
                         val e1 = JSONArray(chain.get("evolves_to").toString()).getJSONObject(0).get("evolves_to")
                         val e2 = JSONArray(e1.toString()).getJSONObject(0).get("species")

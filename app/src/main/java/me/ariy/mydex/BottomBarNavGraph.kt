@@ -4,9 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import me.ariy.mydex.screen.MyDexApp
-import me.ariy.mydex.screen.MyTeamScreen
-import me.ariy.mydex.screen.ViewPokemonScreen
+import me.ariy.mydex.screen.*
 
 
 @Composable
@@ -31,5 +29,27 @@ fun BottomBarNavGraph(navController: NavHostController) {
                 ViewPokemonScreen(navController = navController, name = name)
             }
         }
+        composable(route = BottomBarScreen.statistic.route){
+            Statistic(navController = navController)
+        }
+        composable(route = BottomBarScreen.compare.route){
+            CompareScreen(navController = navController)
+        }
+        composable(route = "team/{name}"){
+            val name = it.arguments?.getString("name")
+            name?.let {
+                ViewTeamScreen(navController = navController, name = name)
+            }
+        }
+        composable(route = "team/{team}/{uid}"){
+            val team = it.arguments?.getString("team")
+            val uid = it.arguments?.getString("uid")
+            uid?.let {
+                if (team != null) {
+                    ViewTeamEditPokemonScreen(navController = navController, uid = uid, team = team)
+                }
+            }
+        }
+
     }
 }

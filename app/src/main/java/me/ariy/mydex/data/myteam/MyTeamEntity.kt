@@ -7,5 +7,6 @@ import java.io.Serializable
 
 @Entity(tableName = "myteam")
 data class MyTeamEntity (
-    @PrimaryKey val uuid: String,
+    @PrimaryKey val uuid : String,
+    @ColumnInfo(name = "pokemon") val pokemon : String,
 ) : Serializable

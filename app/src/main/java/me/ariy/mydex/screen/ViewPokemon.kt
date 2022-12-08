@@ -2,22 +2,28 @@ package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import android.widget.Toast
+import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.runtime.Composable
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.*
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -29,11 +35,17 @@ import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
+import com.google.accompanist.flowlayout.FlowRow
+import com.talhafaki.composablesweettoast.util.SweetToastUtil.SweetError
+import com.talhafaki.composablesweettoast.util.SweetToastUtil.SweetSuccess
 import kotlinx.coroutines.*
 import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
+import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
+import me.ariy.mydex.data.myteam.MyTeamRepository
+import me.ariy.mydex.data.myteam.MyTeamViewModel
 import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.ui.theme.Green
 import me.ariy.mydex.ui.theme.Purple200
@@ -47,20 +59,7 @@ import java.util.*
 fun ViewPokemonScreen(name: String, navController: NavHostController) {
 
     val context = LocalContext.current
-//    val pokemons = mutableListOf<PokemonEntity>()
-
-//    CoroutineScope(Dispatchers.Default).launch { // Use Dispatchers.IO for database or file I/O
-//        val pokemon = findPokemon(context, name).await()
-//        measureTimeMillis {
-//            Log.d("TAG", "sum=${pokemon}")
-//        }.also {
-//            Log.d("TAG", "Completed in $it ms")
-//            pokemons.add(pokemon)
-//        }
-//    }
-
     val pokemon = AppDatabase.getInstance(context).pokemonDao().findByName(name)
-
     Screen(pokemon, context, navController)
 }
 
@@ -90,35 +89,25 @@ fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHos
         else -> bg = Color.Gray
     }
 
-
-    Surface(
-    ) {
-//        Image(
-//            painter = painterResource(id = R.drawable.bg_grass),
-//            contentDescription = null,
-//            contentScale = ContentScale.FillWidth,
-//            modifier = Modifier.fillMaxSize(),
-//        )
-//        AsyncImage(
-//            model = ImageRequest.Builder(LocalContext.current)
-//                .data(R.drawable.bg_grass).crossfade(false).build(),
-//            contentDescription = null,
-//            modifier = Modifier.fillMaxSize(),
-//            contentScale = ContentScale.FillWidth
-//        )
+    Surface() {
         Box(
             modifier = Modifier
                 .padding(0.dp, 0.dp, 0.dp, 0.dp)
                 .fillMaxWidth()
                 .fillMaxHeight()
-                .background(bg)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            bg,
+                            Color.White
+                        )
+                    )
+                )
         ) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-//                    .padding(15.dp)
                     .verticalScroll(rememberScrollState())
-//                .offset(y = .dp)
             ) {
                 PokemonImage(
                     thumbnail = pokemonEntity.thumbnail, modifier = Modifier
@@ -176,87 +165,36 @@ fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHos
                         }
                     }
 
-                    if(AppDatabase.getInstance(context).myteamDao().findByName(pokemonEntity.uuid)!=null){
-                        Button(
-                            onClick = {
-                                AppDatabase.getInstance(context = context).myteamDao().deleteOne(
-                                    MyTeamEntity(pokemonEntity.uuid)
-                                )
-                            },
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Red.copy(alpha = 0.6f),
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Navigation Icon",
-                            )
-                            Text(
-                                text = "Remove ${
-                                    pokemonEntity.uuid.replaceFirstChar {
-                                        if (it.isLowerCase()) it.titlecase(
-                                            Locale.ROOT
-                                        ) else it.toString()
-                                    }
-                                } from MyTeam"
-                            )
-                        }
-                    } else {
-                        Button(
-                            onClick = {
-                                AppDatabase.getInstance(context = context).myteamDao().insertOne(
-                                    MyTeamEntity(pokemonEntity.uuid)
-                                )
-                            },
-                            modifier = Modifier.align(Alignment.CenterHorizontally),
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(
-                                backgroundColor = Green.copy(alpha = 0.6f),
-                                contentColor = Color.White
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Add,
-                                contentDescription = "Navigation Icon",
-                            )
-                            Text(
-                                text = "Add ${
-                                    pokemonEntity.uuid.replaceFirstChar {
-                                        if (it.isLowerCase()) it.titlecase(
-                                            Locale.ROOT
-                                        ) else it.toString()
-                                    }
-                                } to MyTeam"
-                            )
-                        }
-                    }
+                    MyTeamDropdown(pokemonEntity)
 
                     Text(text = "Evolutions", style = MaterialTheme.typography.h6)
-                    Row(
+                    FlowRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp), horizontalArrangement = Arrangement.Center
+                            .padding(8.dp),
                     ) {
                         if (ListTypeConverter.stringToList(pokemonEntity.nextEvolution).size != 1) {
                             for (nextEvo in ListTypeConverter.stringToList(pokemonEntity.nextEvolution)) {
-                                Card(onClick = {
-                                    navController.navigate(
-                                        "pokemon/{name}"
-                                            .replace(
-                                                oldValue = "{name}",
-                                                newValue = nextEvo
-                                            )
-                                    )
-                                }, modifier = Modifier.background(Color.Transparent).padding(4.dp)){
+                                Card(
+                                    onClick = {
+                                        navController.navigate(
+                                            "pokemon/{name}"
+                                                .replace(
+                                                    oldValue = "{name}",
+                                                    newValue = nextEvo
+                                                )
+                                        )
+                                    }, modifier = Modifier
+                                        .background(Color.Transparent)
+                                        .padding(4.dp)
+                                ) {
                                     Column(
                                         verticalArrangement = Arrangement.Center,
                                         horizontalAlignment = Alignment.CenterHorizontally
                                     )
                                     {
-                                        if (AppDatabase.getInstance(LocalContext.current).pokemonDao()
+                                        if (AppDatabase.getInstance(LocalContext.current)
+                                                .pokemonDao()
                                                 .findByName(nextEvo) != null
                                         ) {
                                             Thumbnail(
@@ -285,7 +223,7 @@ fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHos
                             verticalArrangement = Arrangement.Center,
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            for(ability in ListTypeConverter.stringToList(pokemonEntity.abilities)){
+                            for (ability in ListTypeConverter.stringToList(pokemonEntity.abilities)) {
                                 Text(text = ability)
                             }
                         }
@@ -441,4 +379,190 @@ fun Thumbnail(thumbnail: String, modifier: Modifier = Modifier) {
             .padding(8.dp)
 //            .clip(RoundedCornerShape(50)),
     )
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
+    var openDialogSuccess by remember { mutableStateOf(false) }
+    var openDialogError by remember { mutableStateOf(false) }
+    if (openDialogSuccess) {
+        openDialogSuccess = false
+        SweetSuccess(
+            message = "Added Pokemon to your team!",
+            duration = Toast.LENGTH_SHORT,
+            padding = PaddingValues(bottom = 32.dp),
+            contentAlignment = Alignment.BottomCenter
+        )
+    }
+    if (openDialogError) {
+        openDialogError = false
+        SweetError(
+            message = "Looks like your team already have 6 Pokemon!",
+            duration = Toast.LENGTH_SHORT,
+            padding = PaddingValues(bottom = 32.dp),
+            contentAlignment = Alignment.BottomCenter
+        )
+    }
+
+    val coroutineScope = rememberCoroutineScope()
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    var expanded by remember { mutableStateOf(false) }
+    val items = remember { mutableStateListOf<String>() }
+    val context = LocalContext.current
+    val db = AppDatabase.getInstance(context = context).myteamDao().getAll()
+    println(db.size)
+    if (items.size != db.size) {
+        for (i in db.indices) {
+            items.add(db[i].uuid)
+        }
+    }
+    var text by remember { mutableStateOf("") }
+
+    val disabledValue = "B"
+    var selectedIndex by remember { mutableStateOf(0) }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .wrapContentSize(Alignment.TopStart)
+            .bringIntoViewRequester(bringIntoViewRequester)
+    ) {
+//        Text(
+//            items[selectedIndex], modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable(onClick = { expanded = true })
+//                .background(
+//                    MaterialTheme.colors.background
+//                )
+//                .padding(2.dp)
+//        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(
+                onClick = { expanded = true },
+                modifier = Modifier,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Green.copy(0.7f),
+                    contentColor = Color.White
+                ),
+                shape = RoundedCornerShape(50)
+            ) {
+                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon")
+                Text("Add This Pokemon To MyTeam")
+            }
+        }
+
+//        TextField(
+//            value = "Add This Pokemon to MyTeam",
+//            onValueChange = {},
+//            trailingIcon = {
+//                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon")
+//            },
+//            modifier = Modifier
+//                .fillMaxWidth()
+//                .clickable(onClick = { expanded = true })
+//        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    MaterialTheme.colors.background
+                )
+        ) {
+            DropdownMenuItem(
+                onClick = { /*TODO*/ },
+            ) {
+                TextField(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onFocusEvent { state ->
+                            if (state.hasFocus || state.isFocused) {
+                                coroutineScope.launch {
+                                    bringIntoViewRequester.bringIntoView()
+                                }
+                            }
+                        },
+                    placeholder = {
+                        Text(
+                            modifier = Modifier.alpha(ContentAlpha.medium),
+                            text = "Create new team",
+                            color = Color.Black
+                        )
+                    },
+                    value = text,
+                    onValueChange = {
+                        text = it
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            modifier = Modifier.alpha(ContentAlpha.medium),
+                            onClick = {
+                                if(text.isEmpty()){
+                                    return@IconButton
+                                }
+                                items.add(text)
+                                AppDatabase.getInstance(context = context).myteamDao()
+                                    .insertOne(MyTeamEntity(text, ""))
+                                text = ""
+                            })
+                        {
+                            Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon")
+                        }
+                    },
+                    singleLine = true
+                )
+
+            }
+            items.forEachIndexed { index, s ->
+                DropdownMenuItem(onClick = {
+                    selectedIndex = index
+                    expanded = false
+                    val team = AppDatabase.getInstance(context).myteamDao()
+                    val pokemonDB = AppDatabase.getInstance(context).pokemonDao()
+                    val pokemon = ArrayList<PokemonEntity>()
+
+                    var pokemons: List<String> = emptyList()
+
+                    if (team.findById(s).pokemon.isNotEmpty()) {
+                        pokemons = ListTypeConverter.stringToList(team.findById(s).pokemon)
+                        for (i in pokemons.indices) {
+                            pokemon.add(PokemonTypeConverter.stringToPokemonEntity(pokemons[i]))
+                        }
+                    }
+
+                    if (pokemons.size >= 6) {
+                        openDialogError = true
+                    } else {
+                        var newPokemon = pokemonDB.findByName(pokemonEntity.uuid)
+                        newPokemon.uid = UUID.randomUUID().toString()
+                        pokemon.add(newPokemon)
+                        val pokemonString = ArrayList<String>()
+                        for (i in pokemon.indices) {
+                            pokemonString.add(PokemonTypeConverter.pokemonEntityToString(pokemon[i]))
+                        }
+                        team.updatePokemon(s, ListTypeConverter.listToString(pokemonString))
+                        openDialogSuccess = true
+                    }
+
+
+                }) {
+                    val disabledText = if (s == disabledValue) {
+                        " (Disabled)"
+                    } else {
+                        ""
+                    }
+                    Text(text = s + disabledText)
+                }
+            }
+        }
+    }
 }
