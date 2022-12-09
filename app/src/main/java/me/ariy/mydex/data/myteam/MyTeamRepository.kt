@@ -1,26 +1,31 @@
 package me.ariy.mydex.data.myteam
 
 import android.content.Context
+import androidx.lifecycle.LiveData
 import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.pokemon.PokemonEntity
 
-object MyTeamRepository {
-    fun load(context: Context, viewModel: MyTeamViewModel) {
-        val pokemondb = AppDatabase.getInstance(context).pokemonDao()
-        val myteamdb = AppDatabase.getInstance(context).myteamDao()
+class MyTeamRepository(private val myTeamDao: MyTeamDao) {
 
-        for (team in myteamdb.getAll()) {
-            viewModel.addTeam(team)
-        }
+    val team: LiveData<List<MyTeamEntity>> = myTeamDao.getAll()
+
+    suspend fun add(myTeamEntity: MyTeamEntity) {
+        myTeamDao.insert(myTeamEntity)
     }
 
-    fun remove(viewModel: MyTeamViewModel, context: Context, myTeamEntity: MyTeamEntity){
-        viewModel.removeTeam(myTeamEntity)
-        AppDatabase.getInstance(context).myteamDao().deleteOne(myTeamEntity)
+    suspend fun remove(myTeamEntity: MyTeamEntity) {
+        myTeamDao.remove(myTeamEntity)
     }
 
-    fun add(viewModel: MyTeamViewModel, context: Context, myTeamEntity: MyTeamEntity) {
-        viewModel.addTeam(myTeamEntity)
-        AppDatabase.getInstance(context).myteamDao().insertOne(myTeamEntity)
+    suspend fun update(myTeamEntity: MyTeamEntity){
+        myTeamDao.update(myTeamEntity)
+    }
+
+    suspend fun findByName(id: String): MyTeamEntity {
+        return myTeamDao.findByName(id)
+    }
+
+    suspend fun findById(uuid: String): MyTeamEntity {
+        return myTeamDao.findById(uuid)
     }
 }

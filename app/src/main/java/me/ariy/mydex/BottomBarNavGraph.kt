@@ -21,7 +21,7 @@ fun BottomBarNavGraph(navController: NavHostController) {
             MyTeamScreen(navController = navController)
         }
         composable(route = BottomBarScreen.settings.route){
-            MyTeamScreen(navController = navController)
+            SettingsScreen(navController = navController)
         }
         composable(route = "pokemon/{name}"){
             val name = it.arguments?.getString("name")
@@ -48,6 +48,12 @@ fun BottomBarNavGraph(navController: NavHostController) {
                 if (team != null) {
                     ViewTeamEditPokemonScreen(navController = navController, uid = uid, team = team)
                 }
+            }
+        }
+        composable(route = "search/{query}"){
+            val query = it.arguments?.getString("query")
+            if (query != null) {
+                SearchScreen(navController = navController, query = query)
             }
         }
 

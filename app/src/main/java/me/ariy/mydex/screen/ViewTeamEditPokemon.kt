@@ -1,41 +1,60 @@
 package me.ariy.mydex.screen
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import android.app.Application
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.PokemonTypeConverter
+import me.ariy.mydex.data.myteam.MyTeamViewModel
+import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
+import me.ariy.mydex.data.pokemon.PokemonViewModel
+import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
 import me.ariy.mydex.ui.theme.Green
-import java.util.ArrayList
+import java.util.*
+import kotlin.collections.HashMap
 
 @Composable
 fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: String) {
     val context = LocalContext.current
-    val db = AppDatabase.getInstance(context)
-    val pokemonDB = db.pokemonDao()
-    val teamDB = db.myteamDao()
+    val pokemonDB: PokemonViewModel =
+        viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
+    val teamDB: MyTeamViewModel =
+        viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
 
-    val team = teamDB.findById(team)
+    val myteam = teamDB.findById(team)
     var pokemonEntity: PokemonEntity? = null
 
-    val stringPokemon: List<String> = ListTypeConverter.stringToList(team.pokemon)
+    if(myteam.pokemon == null){
+        return
+    }
+
+    val stringPokemon: List<String> = ListTypeConverter.stringToList(myteam.pokemon)
     for (i in stringPokemon.indices) {
         val pokemon = PokemonTypeConverter.stringToPokemonEntity(stringPokemon[i])
         if (pokemon.uid == uid) {
@@ -44,31 +63,70 @@ fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: S
     }
 
     if (pokemonEntity != null) {
-        val stats = remember { mutableStateMapOf<String, Float>() }
+        val stats = remember { mutableStateMapOf<String, Int>() }
         var nickname by remember { mutableStateOf(pokemonEntity.nickname) }
         MapTypeConverter.stringToMap(pokemonEntity.baseStats).forEach { item ->
-            stats[item.key] = item.value.toFloat()
+            stats[item.key] = item.value.toInt()
         }
 
-        Surface() {
+        Surface(
+        ) {
+            Box(
+                modifier = Modifier
+                    .padding(0.dp, 0.dp, 0.dp, 0.dp)
+                    .fillMaxWidth()
+                    .fillMaxHeight()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                getTypeColor(ListTypeConverter.stringToList(pokemonEntity.type)[0]),
+                                Color.White
+                            )
+                        )
+                    )
+            )
 //            Text(text = pokemonEntity.uid)
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                item {
-                    PokemonImage(thumbnail = pokemonEntity.thumbnail)
-                    Text(text = pokemonEntity.uuid)
-                    TextField(value = nickname, onValueChange = {
-                        nickname = it
-                    }, modifier = Modifier.fillMaxWidth(),
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                PokemonImage(
+                    thumbnail = pokemonEntity.thumbnail, modifier = Modifier
+                        .align(Alignment.CenterHorizontally)
+                        .offset(y = 60.dp)
+                        .zIndex(1f)
+                )
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(15.dp),
+                    modifier = Modifier
+                        .background(
+                            color = Color.White.copy(alpha = 0.9f),
+                            shape = RoundedCornerShape(5)
+                        )
+                        .padding(15.dp, 50.dp, 15.dp, 25.dp)
+                ) {
+                    Text(text = pokemonEntity.uuid.replaceFirstChar {
+                        if (it.isLowerCase()) it.titlecase(
+                            Locale.ROOT
+                        ) else it.toString()
+                    }, style = MaterialTheme.typography.h6, textAlign = TextAlign.Center, modifier = Modifier.align(CenterHorizontally))
+                    TextField(
+                        value = nickname, onValueChange = {
+                            nickname = it
+                        }, modifier = Modifier.fillMaxWidth(),
                         placeholder = {
                             Text(text = "Give this pokemon a nickname")
                         },
-                        singleLine = true)
+                        singleLine = true
+                    )
                     stats.forEach { item ->
                         Text(text = "${item.key}")
                         TextField(
                             value = "${stats[item.key]}",
                             onValueChange = {
-                                stats[item.key] = it.toFloat()
+                                stats[item.key] = it.toInt()
                             },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions.Default.copy(keyboardType = KeyboardType.Number),
@@ -78,41 +136,47 @@ fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: S
                     Button(
                         onClick = {
                             pokemonEntity.nickname = nickname
-                            val newStats = HashMap<String, String>()
-                            stats.forEach {
-                                item ->
-                                newStats[item.key] = item.value.toString()
+                            val newStats = HashMap<String, Int>()
+                            stats.forEach { item ->
+                                newStats[item.key] = item.value
                             }
                             pokemonEntity.baseStats = MapTypeConverter.mapToString(newStats)
 
                             val pokemonString = ArrayList<String>()
                             val pokemonList = ArrayList<PokemonEntity>()
-                            for(i in stringPokemon.indices){
-                                if(pokemonEntity.uid != PokemonTypeConverter.stringToPokemonEntity(
+                            for (i in stringPokemon.indices) {
+                                if (pokemonEntity.uid != PokemonTypeConverter.stringToPokemonEntity(
                                         stringPokemon[i]
-                                    ).uid) {
-                                    pokemonList.add(PokemonTypeConverter.stringToPokemonEntity(stringPokemon[i]))
+                                    ).uid
+                                ) {
+                                    pokemonList.add(
+                                        PokemonTypeConverter.stringToPokemonEntity(
+                                            stringPokemon[i]
+                                        )
+                                    )
                                 }
-                                if(pokemonEntity.uid == PokemonTypeConverter.stringToPokemonEntity(
+                                if (pokemonEntity.uid == PokemonTypeConverter.stringToPokemonEntity(
                                         stringPokemon[i]
-                                    ).uid) {
+                                    ).uid
+                                ) {
                                     pokemonList.add(pokemonEntity)
                                 }
                             }
 
-                            for(i in pokemonList.indices){
-                                pokemonString.add(PokemonTypeConverter.pokemonEntityToString(
-                                    pokemonList[i]
-                                ))
+                            for (i in pokemonList.indices) {
+                                pokemonString.add(
+                                    PokemonTypeConverter.pokemonEntityToString(
+                                        pokemonList[i]
+                                    )
+                                )
                             }
 
-                            AppDatabase.getInstance(context).myteamDao()
-                                .updatePokemon(team.uuid, ListTypeConverter.listToString(pokemonString))
-
+                            myteam.pokemon = ListTypeConverter.listToString(pokemonString)
+                            teamDB.updateTeam(myteam)
 
 
                         },
-                        modifier = Modifier,
+                        modifier = Modifier.align(Alignment.CenterHorizontally),
                         colors = ButtonDefaults.buttonColors(
                             backgroundColor = Green.copy(0.7f),
                             contentColor = Color.White

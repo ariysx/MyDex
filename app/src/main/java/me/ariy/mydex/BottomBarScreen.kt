@@ -5,40 +5,40 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.ui.graphics.vector.ImageVector
 
 sealed class BottomBarScreen(
     val route: String,
     val title: String,
-    val icon: ImageVector
+    val icon: Int
 ) {
     object home : BottomBarScreen(
         route = "home",
         title = "Pokedex",
-        icon = Icons.Default.Home
+        icon = R.drawable.ic_baseline_home_24
     )
 
     object team : BottomBarScreen(
         route = "team",
         title = "MyTeam",
-        icon = Icons.Default.Person
+        icon = R.drawable.ic_baseline_groups_24
     )
 
     object settings : BottomBarScreen(
         route = "settings",
         title = "Settings",
-        icon = Icons.Default.Settings
+        icon = R.drawable.ic_baseline_settings_24
     )
 
     object statistic : BottomBarScreen(
         route = "statistic",
-        title = "statistic",
-        icon = Icons.Default.List
+        title = "Statistic",
+        icon = R.drawable.ic_baseline_auto_graph_24
     )
-
+    
     object compare : BottomBarScreen(
         route = "compare",
-        title = "compare",
-        icon = Icons.Default.List
+        title = "Compare",
+        icon = R.drawable.ic_baseline_compare_arrows_24
     )
+
 }

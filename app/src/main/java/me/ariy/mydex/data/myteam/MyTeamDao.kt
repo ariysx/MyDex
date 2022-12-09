@@ -1,30 +1,35 @@
 package me.ariy.mydex.data.myteam
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Update
 
 @Dao
 interface MyTeamDao {
     @Query("SELECT * FROM myteam")
-    fun getAll(): List<MyTeamEntity>
+    fun getAll(): LiveData<List<MyTeamEntity>>
 
     @Insert
-    fun insertOne(myTeamEntity: MyTeamEntity)
+    suspend fun insert(myTeamEntity: MyTeamEntity)
 
     @Delete
-    fun deleteOne(myTeamEntity: MyTeamEntity)
-//
-    @Query("SELECT * FROM myteam WHERE uuid LIKE :id LIMIT 1")
-    fun findById(id: String) : MyTeamEntity
+    suspend fun remove(myTeamEntity: MyTeamEntity)
 
-    @Query("UPDATE myteam SET pokemon = :pokemon WHERE uuid = :id")
-    fun updatePokemon(id: String, pokemon: String)
+    @Update
+    suspend fun update(myTeamEntity: MyTeamEntity)
+
+    @Query("SELECT * FROM myteam WHERE name LIKE :name LIMIT 1")
+    suspend fun findByName(name: String) : MyTeamEntity
+
+    @Query("SELECT * FROM myteam WHERE uuid LIKE :uuid LIMIT 1")
+    suspend fun findById(uuid: String) : MyTeamEntity
+
+    @Insert
+    fun insertOnCreate(myTeamEntity: MyTeamEntity)
 //
-//    @Query("SELECT COUNT(uuid) FROM myteam")
-//    fun countPokemons(): Int
-//
-//    @Insert
-//    fun insertOne(name: String)
+//    @Query("UPDATE myteam SET pokemon = :pokemon WHERE uuid = :id")
+//    suspend fun updatePokemon(id: String, pokemon: String)
 }

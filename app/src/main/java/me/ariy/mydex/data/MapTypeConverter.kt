@@ -14,7 +14,7 @@ object MapTypeConverter {
 
     @TypeConverter
     @JvmStatic
-    fun mapToString(value: Map<String, String>?): String {
+    fun mapToString(value: Map<String, Int>?): String {
         return if(value == null) "" else Gson().toJson(value)
     }
 }

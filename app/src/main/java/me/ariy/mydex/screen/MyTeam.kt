@@ -1,6 +1,7 @@
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,6 +22,7 @@ import androidx.compose.material.DismissValue.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -30,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.accompanist.flowlayout.FlowRow
 import me.ariy.mydex.data.AppDatabase
@@ -38,6 +41,7 @@ import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
 import me.ariy.mydex.data.myteam.MyTeamRepository
 import me.ariy.mydex.data.myteam.MyTeamViewModel
+import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.ui.theme.Green
 import me.ariy.mydex.ui.theme.Red
@@ -46,14 +50,16 @@ import kotlin.concurrent.thread
 
 @Composable
 fun MyTeamScreen(
-    viewModel: MyTeamViewModel = MyTeamViewModel(),
     navController: NavHostController
 ) {
     val context = LocalContext.current
 //    thread {
 //        println("${Thread.currentThread()} has run.")
 //    }
-    MyTeamRepository.load(context, viewModel)
+
+    var viewModel: MyTeamViewModel =
+        viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
+
     MyTeamList(viewModel, navController, context)
 }
 
@@ -61,24 +67,22 @@ fun MyTeamScreen(
 fun MyTeamList(viewModel: MyTeamViewModel, navController: NavHostController, context: Context) {
     Surface() {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+
             Text(text = "MyTeam", style = MaterialTheme.typography.h5)
 
             MyTeamAddBar(onCloseClicked = {
 
             }, onAddClicked = {
-                if(it.isEmpty()){
+                if (it.isEmpty()) {
                     return@MyTeamAddBar
                 }
                 var pokemon = ArrayList<String>()
-                var db = AppDatabase.getInstance(context).pokemonDao()
-                pokemon.add(PokemonTypeConverter.pokemonEntityToString(db.findByName("bulbasaur")))
-                pokemon.add(PokemonTypeConverter.pokemonEntityToString(db.findByName("pikachu")))
-                pokemon.add(PokemonTypeConverter.pokemonEntityToString(db.findByName("eevee")))
 
-                MyTeamRepository.add(
-                    viewModel = viewModel,
-                    context = context,
-                    myTeamEntity = MyTeamEntity(it, ListTypeConverter.listToString(pokemon))
+                viewModel.addTeam(
+                    MyTeamEntity(
+                        name = it,
+                        pokemon = ListTypeConverter.listToString(pokemon)
+                    )
                 )
             })
 
@@ -159,20 +163,29 @@ fun MyTeamAddBar(
 @Composable
 fun MyContent(
     viewModel: MyTeamViewModel,
-    context: Context = LocalContext.current,
     dismissed: (listItem: MyTeamEntity) -> Unit = {},
     onCardClicked: (uuid: String) -> Unit,
 ) {
+
+    val items = viewModel.team.observeAsState(listOf()).value
+
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(items = viewModel.team, key = { item -> item.uuid }) { team ->
+        items(items = items, key = { item -> item.uuid }) { team ->
+            var teamScore = 0
+            if(team.pokemon.isNotEmpty()){
+
+                var pokemons = ListTypeConverter.stringToList(team.pokemon)
+                for (i in pokemons.indices) {
+                    val pokemon =
+                        PokemonTypeConverter.stringToPokemonEntity(pokemons[i])
+                    teamScore += getCombatPower(pokemon)
+                }
+            }
+
             val dismissState = rememberDismissState()
             if (dismissState.isDismissed(EndToStart)) {
                 dismissed(team)
-                MyTeamRepository.remove(
-                    viewModel = viewModel,
-                    context = context,
-                    myTeamEntity = team
-                )
+                viewModel.removeTeam(team)
                 println("Removing: " + team.uuid)
             }
             SwipeToDismiss(
@@ -220,33 +233,55 @@ fun MyContent(
                 dismissContent = {
                     Card(
                         modifier = Modifier.padding(8.dp),
-                        onClick = { onCardClicked(team.uuid) }
+                        onClick = {
+                            if (viewModel.findById(team.uuid) != null) {
+                                onCardClicked(team.uuid)
+                            }
+                        }
                     ) {
-                        Column {
-                            Row(
+                        var bg: Color = Color.White
+//                        if(team.pokemon != null || team.pokemon != ""){
+//                            val firstPokemon = ListTypeConverter.stringToList(team.pokemon)[0]
+//                            val firstPokemonType = PokemonTypeConverter.stringToPokemonEntity(firstPokemon).type
+//                            val firstType = ListTypeConverter.stringToList(firstPokemonType)[0]
+//                            bg = getTypeColor(text = firstType)
+//                        }
+                        if(team.pokemon.isNotEmpty()){
+
+                            var pokemons = ListTypeConverter.stringToList(team.pokemon)
+                            for (i in pokemons.indices) {
+
+                                val pokemon =
+                                    PokemonTypeConverter.stringToPokemonEntity(pokemons[i])
+                                val type = ListTypeConverter.stringToList(pokemon.type)
+                                bg = getTypeColor(text = type[0])
+                                break
+                            }
+                        }
+
+                        Column(modifier = Modifier
+                            .background(
+                                color = bg.copy(0.3f))) {
+                            Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp)
                             ) {
-                                Text(text = team.uuid, style = MaterialTheme.typography.h6)
+                                Text(text = team.name, style = MaterialTheme.typography.h6)
+                                Text(text = "$teamScore Team Combat Power", style = MaterialTheme.typography.body1)
                             }
 
                             FlowRow() {
                                 if (team.pokemon.isNotEmpty()) {
                                     var pokemons = ListTypeConverter.stringToList(team.pokemon)
                                     for (i in pokemons.indices) {
-                                        Card(
-                                            modifier = Modifier.padding(2.dp),
-                                        ) {
-                                            Column(modifier = Modifier.padding(0.dp),){
-                                                val pokemon =
-                                                    PokemonTypeConverter.stringToPokemonEntity(pokemons[i])
-                                                PokemonThumbnail(thumbnail = pokemon.thumbnail, modifier = Modifier
-                                                    .size(48.dp)
-                                                    .padding(0.dp))
-//                                                Text(text = pokemon.uuid)
-                                            }
-                                        }
+                                        val pokemon =
+                                            PokemonTypeConverter.stringToPokemonEntity(pokemons[i])
+                                        PokemonThumbnail(
+                                            thumbnail = pokemon.thumbnail, modifier = Modifier
+                                                .size(52.dp)
+                                                .padding(0.dp)
+                                        )
                                     }
                                 }
                             }

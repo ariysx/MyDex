@@ -1,6 +1,7 @@
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.*
@@ -12,18 +13,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.Center
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusEvent
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import coil.request.CachePolicy
@@ -38,34 +39,31 @@ import coil.request.ImageRequest
 import com.google.accompanist.flowlayout.FlowRow
 import com.talhafaki.composablesweettoast.util.SweetToastUtil.SweetError
 import com.talhafaki.composablesweettoast.util.SweetToastUtil.SweetSuccess
-import kotlinx.coroutines.*
-import me.ariy.mydex.data.AppDatabase
+import kotlinx.coroutines.launch
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
-import me.ariy.mydex.data.myteam.MyTeamRepository
 import me.ariy.mydex.data.myteam.MyTeamViewModel
+import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
-import me.ariy.mydex.ui.theme.Green
-import me.ariy.mydex.ui.theme.Purple200
-import me.ariy.mydex.ui.theme.Red
-import me.ariy.mydex.ui.theme.Teal
+import me.ariy.mydex.data.pokemon.PokemonViewModel
+import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
+import me.ariy.mydex.ui.theme.*
 import java.util.*
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ViewPokemonScreen(name: String, navController: NavHostController) {
-
     val context = LocalContext.current
-    val pokemon = AppDatabase.getInstance(context).pokemonDao().findByName(name)
-    Screen(pokemon, context, navController)
+    val viewModel: PokemonViewModel = viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
+    val pokemon = viewModel.getPokemon(name)
+    Screen(viewModel, pokemon, context, navController)
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHostController) {
+fun Screen(viewModel: PokemonViewModel, pokemonEntity: PokemonEntity, context: Context, navController: NavHostController) {
     val baseStats = MapTypeConverter.stringToMap(pokemonEntity.baseStats)
     val type = ListTypeConverter.stringToList(pokemonEntity.type)
     var bg = Color.Gray
@@ -155,68 +153,79 @@ fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHos
                             .padding(8.dp), horizontalArrangement = Arrangement.Center
                     )
                     {
-                        Column() {
-                            Text(text = "Height")
-                            Text(text = pokemonEntity.height.toString() + " decimetres")
+                        Column(
+                            modifier = Modifier.padding(25.dp, 0.dp)
+                        ) {
+                            Text(text = pokemonEntity.height.toString() + " M", textAlign = TextAlign.Center)
+                            Text(text = "Height", textAlign = TextAlign.Center)
                         }
-                        Column() {
-                            Text(text = "Weight")
-                            Text(text = pokemonEntity.weight.toString() + " hectograms")
+                        Column(
+                            modifier = Modifier.padding(25.dp, 0.dp)
+                        ) {
+                            Text(text = pokemonEntity.weight.toString() + " KG", textAlign = TextAlign.Center)
+                            Text(text = "Weight", textAlign = TextAlign.Center)
                         }
                     }
 
                     MyTeamDropdown(pokemonEntity)
 
                     Text(text = "Evolutions", style = MaterialTheme.typography.h6)
-                    FlowRow(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
+                    Box (
+                        contentAlignment = Center
                     ) {
-                        if (ListTypeConverter.stringToList(pokemonEntity.nextEvolution).size != 1) {
-                            for (nextEvo in ListTypeConverter.stringToList(pokemonEntity.nextEvolution)) {
-                                Card(
-                                    onClick = {
-                                        navController.navigate(
-                                            "pokemon/{name}"
-                                                .replace(
-                                                    oldValue = "{name}",
-                                                    newValue = nextEvo
-                                                )
-                                        )
-                                    }, modifier = Modifier
-                                        .background(Color.Transparent)
-                                        .padding(4.dp)
-                                ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.Center,
-                                        horizontalAlignment = Alignment.CenterHorizontally
-                                    )
-                                    {
-                                        if (AppDatabase.getInstance(LocalContext.current)
-                                                .pokemonDao()
-                                                .findByName(nextEvo) != null
-                                        ) {
-                                            Thumbnail(
-                                                thumbnail = AppDatabase.getInstance(LocalContext.current)
-                                                    .pokemonDao().findByName(nextEvo).thumbnail,
+                        FlowRow(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                        ) {
+                            if (ListTypeConverter.stringToList(pokemonEntity.nextEvolution).size != 1) {
+                                for (nextEvo in ListTypeConverter.stringToList(pokemonEntity.nextEvolution)) {
+                                    Card(
+                                        onClick = {
+                                            navController.navigate(
+                                                "pokemon/{name}"
+                                                    .replace(
+                                                        oldValue = "{name}",
+                                                        newValue = nextEvo
+                                                    )
                                             )
+                                        }, modifier = Modifier
+                                            .background(Color.Transparent)
+                                            .padding(4.dp)
+                                            .wrapContentSize(Alignment.Center),
+
+                                    ) {
+                                        Column(
+//                                            modifier = Modifier.fillMaxSize(),
+                                            verticalArrangement = Arrangement.Center,
+                                            horizontalAlignment = Alignment.CenterHorizontally
+                                        ) {
+                                            Box(contentAlignment = Alignment.Center){
+                                                if(viewModel.getPokemon(nextEvo) != null){
+                                                    Thumbnail(
+                                                        thumbnail = viewModel.getPokemon(nextEvo).thumbnail,
+                                                    )
+                                                }
+                                            }
+                                            Box(contentAlignment = Center){
+                                                Text(text = nextEvo.replaceFirstChar {
+                                                    if (it.isLowerCase()) it.titlecase(
+                                                        Locale.ROOT
+                                                    ) else it.toString()
+                                                }, textAlign = TextAlign.Center)
+                                            }
                                         }
-                                        Text(text = nextEvo.replaceFirstChar {
-                                            if (it.isLowerCase()) it.titlecase(
-                                                Locale.ROOT
-                                            ) else it.toString()
-                                        }, textAlign = TextAlign.Center)
                                     }
                                 }
+                            } else {
+                                Text(
+                                    text = "This pokemon has no evolution",
+                                    textAlign = TextAlign.Center
+                                )
                             }
-                        } else {
-                            Text(
-                                text = "This pokemon has no evolution",
-                                textAlign = TextAlign.Center
-                            )
                         }
                     }
+
                     Text(text = "Abilities", style = MaterialTheme.typography.h6)
                     Row() {
                         Column(
@@ -237,33 +246,39 @@ fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHos
                     // {"speed":"45","defense":"49","special-attack":"65","special-defense":"65","attack":"49","hp":"45"}
                     baseStats["speed"]?.let { it1 ->
                         StatsBar(
-                            text = "Speed: $it1", value = it1.toFloat() * 0.01f
+                            text = "Speed: $it1", value = it1.toFloat() * 0.01f,
+                            color = getTypeColor(text = type[0])
                         )
                     }
                     baseStats["defense"]?.let { it1 ->
                         StatsBar(
-                            text = "Defense: $it1", value = it1.toFloat() * 0.01f
+                            text = "Defense: $it1", value = it1.toFloat() * 0.01f,
+                            color = getTypeColor(text = type[0])
                         )
                     }
                     baseStats["hp"]?.let { it1 ->
                         StatsBar(
                             text = "HP: $it1",
-                            value = it1.toFloat() * 0.01f
+                            value = it1.toFloat() * 0.01f,
+                            color = getTypeColor(text = type[0])
                         )
                     }
                     baseStats["special-attack"]?.let { it1 ->
                         StatsBar(
-                            text = "Special Attack: $it1", value = it1.toFloat() * 0.01f
+                            text = "Special Attack: $it1", value = it1.toFloat() * 0.01f,
+                            color = getTypeColor(text = type[0])
                         )
                     }
                     baseStats["special-defense"]?.let { it1 ->
                         StatsBar(
-                            text = "Special Defense: $it1", value = it1.toFloat() * 0.01f
+                            text = "Special Defense: $it1", value = it1.toFloat() * 0.01f,
+                            color = getTypeColor(text = type[0])
                         )
                     }
                     baseStats["attack"]?.let { it1 ->
                         StatsBar(
-                            text = "Attack: $it1", value = it1.toFloat() * 0.01f
+                            text = "Attack: $it1", value = it1.toFloat() * 0.01f,
+                            color = getTypeColor(text = type[0])
                         )
                     }
 
@@ -275,7 +290,7 @@ fun Screen(pokemonEntity: PokemonEntity, context: Context, navController: NavHos
 
 //@Preview
 @Composable
-fun StatsBar(text: String, value: Float) {
+fun StatsBar(text: String, value: Float, color: Color) {
     Column() {
         Text(text = text)
         Column(
@@ -293,35 +308,18 @@ fun StatsBar(text: String, value: Float) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(CircleShape)
-                    .height(5.dp), progress = value
+                    .height(5.dp), progress = value,
+                color = color
             )
         }
-//        color = Color.RED, //progress color
+//        color = me.ariy.mydex.data.pokemon.entity.species.Color.RED, //progress color
     }
 }
 
 
 @Composable
 fun TypeBadge(text: String, color: androidx.compose.ui.graphics.Color) {
-    val c: androidx.compose.ui.graphics.Color
-    when (text) {
-        "fire" -> c = me.ariy.mydex.ui.theme.DeepOrange
-        "grass" -> c = me.ariy.mydex.ui.theme.Green
-        "normal" -> c = me.ariy.mydex.ui.theme.Gray
-        "poison" -> c = me.ariy.mydex.ui.theme.Purple
-        "flying" -> c = me.ariy.mydex.ui.theme.BlueGray
-        "water" -> c = me.ariy.mydex.ui.theme.Cyan
-        "electric" -> c = me.ariy.mydex.ui.theme.Yellow
-        "bug" -> c = me.ariy.mydex.ui.theme.Lime
-        "ground" -> c = me.ariy.mydex.ui.theme.Gray
-        "fighting" -> c = me.ariy.mydex.ui.theme.Red
-        "ghost" -> c = Purple200
-        "rock" -> c = Color.Gray
-        "psychic" -> c = Purple200
-        "ice" -> c = me.ariy.mydex.ui.theme.Indigo
-        "fairy" -> c = Color.Magenta
-        else -> c = Color.Gray
-    }
+    val c: Color = getTypeColor(text)
 
     Box(
         modifier = Modifier
@@ -336,6 +334,30 @@ fun TypeBadge(text: String, color: androidx.compose.ui.graphics.Color) {
     }
 }
 
+@Composable
+fun getTypeColor(text: String): Color {
+    val c: Color
+    when (text) {
+        "fire" -> c = DeepOrange
+        "grass" -> c = Green
+        "normal" -> c = Gray
+        "poison" -> c = Purple
+        "flying" -> c = BlueGray
+        "water" -> c = Cyan
+        "electric" -> c = Yellow
+        "bug" -> c = Lime
+        "ground" -> c = Gray
+        "fighting" -> c = Red
+        "ghost" -> c = Purple200
+        "rock" -> c = Color.Gray
+        "psychic" -> c = Purple200
+        "ice" -> c = Indigo
+        "fairy" -> c = Color.Magenta
+        else -> c = Color.Gray
+    }
+    return c
+}
+
 
 @Preview
 @Composable
@@ -346,7 +368,7 @@ fun PreviewTypeBadge() {
 @Preview
 @Composable
 fun PreviewStatsBar() {
-    StatsBar(text = "Attack", value = 0.07f)
+    StatsBar(text = "Attack", value = 0.07f, getTypeColor(text = "fire"))
 }
 
 @Composable
@@ -355,7 +377,7 @@ fun PokemonImage(thumbnail: String, modifier: Modifier = Modifier) {
         model = ImageRequest.Builder(LocalContext.current).data(thumbnail).crossfade(false)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED).build(),
-        contentDescription = "Pokemon Image",
+        contentDescription = "me.ariy.mydex.data.pokemon.entity.species.Pokemon Image",
         contentScale = ContentScale.Fit,
         alignment = Alignment.Center,
         modifier = modifier
@@ -371,7 +393,7 @@ fun Thumbnail(thumbnail: String, modifier: Modifier = Modifier) {
         model = ImageRequest.Builder(LocalContext.current).data(thumbnail).crossfade(false)
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED).build(),
-        contentDescription = "Pokemon Image",
+        contentDescription = "me.ariy.mydex.data.pokemon.entity.species.Pokemon Image",
         contentScale = ContentScale.Fit,
         alignment = Alignment.Center,
         modifier = modifier
@@ -384,12 +406,17 @@ fun Thumbnail(thumbnail: String, modifier: Modifier = Modifier) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
+    val uppercasePokemonName = pokemonEntity.uuid.replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(
+            Locale.ROOT
+        ) else it.toString()
+    }
     var openDialogSuccess by remember { mutableStateOf(false) }
     var openDialogError by remember { mutableStateOf(false) }
     if (openDialogSuccess) {
         openDialogSuccess = false
         SweetSuccess(
-            message = "Added Pokemon to your team!",
+            message = "Added ${uppercasePokemonName} to your team!",
             duration = Toast.LENGTH_SHORT,
             padding = PaddingValues(bottom = 32.dp),
             contentAlignment = Alignment.BottomCenter
@@ -410,13 +437,16 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
     var expanded by remember { mutableStateOf(false) }
     val items = remember { mutableStateListOf<String>() }
     val context = LocalContext.current
-    val db = AppDatabase.getInstance(context = context).myteamDao().getAll()
-    println(db.size)
-    if (items.size != db.size) {
-        for (i in db.indices) {
-            items.add(db[i].uuid)
+    
+    val teamViewModel: MyTeamViewModel = viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
+    val teams = teamViewModel.team.observeAsState(listOf()).value
+    print(teams.size)
+    if (items.size < teams.size) {
+        for (i in teams.indices) {
+            items.add(teams[i].name)
         }
     }
+
     var text by remember { mutableStateOf("") }
 
     val disabledValue = "B"
@@ -427,16 +457,6 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
             .wrapContentSize(Alignment.TopStart)
             .bringIntoViewRequester(bringIntoViewRequester)
     ) {
-//        Text(
-//            items[selectedIndex], modifier = Modifier
-//                .fillMaxWidth()
-//                .clickable(onClick = { expanded = true })
-//                .background(
-//                    MaterialTheme.colors.background
-//                )
-//                .padding(2.dp)
-//        )
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -454,20 +474,13 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                 shape = RoundedCornerShape(50)
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon")
-                Text("Add This Pokemon To MyTeam")
+                Text("Add ${pokemonEntity.uuid.replaceFirstChar {
+                    if (it.isLowerCase()) it.titlecase(
+                        Locale.getDefault()
+                    ) else it.toString()
+                }} To MyTeam")
             }
         }
-
-//        TextField(
-//            value = "Add This Pokemon to MyTeam",
-//            onValueChange = {},
-//            trailingIcon = {
-//                Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon")
-//            },
-//            modifier = Modifier
-//                .fillMaxWidth()
-//                .clickable(onClick = { expanded = true })
-//        )
 
         DropdownMenu(
             expanded = expanded,
@@ -510,8 +523,7 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                                     return@IconButton
                                 }
                                 items.add(text)
-                                AppDatabase.getInstance(context = context).myteamDao()
-                                    .insertOne(MyTeamEntity(text, ""))
+                                teamViewModel.addTeam(MyTeamEntity(name = text))
                                 text = ""
                             })
                         {
@@ -526,14 +538,14 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                 DropdownMenuItem(onClick = {
                     selectedIndex = index
                     expanded = false
-                    val team = AppDatabase.getInstance(context).myteamDao()
-                    val pokemonDB = AppDatabase.getInstance(context).pokemonDao()
                     val pokemon = ArrayList<PokemonEntity>()
 
                     var pokemons: List<String> = emptyList()
 
-                    if (team.findById(s).pokemon.isNotEmpty()) {
-                        pokemons = ListTypeConverter.stringToList(team.findById(s).pokemon)
+                    val team = teamViewModel.findByName(s)
+
+                    if (team != null && team.pokemon.isNotEmpty()) {
+                        pokemons = ListTypeConverter.stringToList(team.pokemon)
                         for (i in pokemons.indices) {
                             pokemon.add(PokemonTypeConverter.stringToPokemonEntity(pokemons[i]))
                         }
@@ -542,14 +554,16 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                     if (pokemons.size >= 6) {
                         openDialogError = true
                     } else {
-                        var newPokemon = pokemonDB.findByName(pokemonEntity.uuid)
+                        var newPokemon = pokemonEntity
                         newPokemon.uid = UUID.randomUUID().toString()
                         pokemon.add(newPokemon)
                         val pokemonString = ArrayList<String>()
+
                         for (i in pokemon.indices) {
                             pokemonString.add(PokemonTypeConverter.pokemonEntityToString(pokemon[i]))
                         }
-                        team.updatePokemon(s, ListTypeConverter.listToString(pokemonString))
+                        team.pokemon = ListTypeConverter.listToString(pokemonString)
+                        teamViewModel.updateTeam(team)
                         openDialogSuccess = true
                     }
 

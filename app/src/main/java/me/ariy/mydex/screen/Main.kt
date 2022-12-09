@@ -1,6 +1,7 @@
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
+import android.app.Application
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -9,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,16 +19,21 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -37,6 +44,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.google.accompanist.flowlayout.FlowRow
+import kotlinx.coroutines.coroutineScope
 import me.ariy.mydex.BottomBarNavGraph
 import me.ariy.mydex.BottomBarScreen
 import me.ariy.mydex.data.AppDatabase
@@ -44,79 +52,58 @@ import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.data.pokemon.PokemonRepository
 import me.ariy.mydex.data.pokemon.PokemonViewModel
+import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
+import me.ariy.mydex.data.retrofit.RetrofitAPI
 import me.ariy.mydex.ui.theme.*
+import okhttp3.internal.applyConnectionSpec
 import java.util.*
 import kotlin.concurrent.thread
 
-@SuppressLint("UnusedMaterialScaffoldPaddingParameter")
+@SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnrememberedMutableState")
 @Composable
 fun MyDexApp(
-    viewModel: PokemonViewModel = androidx.lifecycle.viewmodel.compose.viewModel(),
     navController: NavHostController
 ) {
     val context = LocalContext.current
+    val viewModel: PokemonViewModel =
+        viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
+//    viewModel.syncCloud()
+
     thread {
-        println("${Thread.currentThread()} has run.")
-        if(viewModel != null){
-            PokemonRepository.syncCloud(context, viewModel)
+        val count = AppDatabase.getInstance(context.applicationContext).pokemonDao().countPokemon()
+        if (count == 0) {
+            println("[CloudSync] Initialising...")
+            viewModel.syncCloud()
         }
     }
+    viewModel.pokemon.value?.sortedBy { it.pokedexID }
+
+    val items = viewModel.pokemon.observeAsState(listOf()).value
+
+
+    println("[Database] Pokemon In Database: ${items.size}")
+    viewModel.syncCloud()
 
     Scaffold()
     {
 
         SearchBarApp(onCloseClicked = {
-            PokemonRepository.loadLocal(context, viewModel.pokemons)
+//            navController.navigate("home")
         }, onSearchClicked = {
             var query = it.lowercase()
-            var type: String = ""
-            when(query) {
-                "normal" -> type = "normal"
-                "fire" -> type = "fire"
-                "water" -> type = "water"
-                "electric" -> type = "electric"
-                "ice" -> type = "ice"
-                "fighting" -> type = "fighting"
-                "poison" -> type = "poison"
-                "ground" -> type = "ground"
-                "flying" -> type = "flying"
-                "psychic" -> type = "psychic"
-                "bug" -> type = "bug"
-                "rock" -> type = "rock"
-                "ghost" -> type = "ghost"
-                "dark" -> type = "dark"
-                "dragon" -> type = "dragon"
-                "steel" -> type = "steel"
-                "fairy" -> type = "fairy"
-                "grass" -> type = "grass"
-
-            }
-
-            if(type.isEmpty()){
-                println("[SearchBar] Searching for query")
-                var filtered = viewModel.pokemons.filter { pokemon -> pokemon.uuid.contains(it) }
-                viewModel.clear()
-                for (i in filtered) {
-                    viewModel.addPokemon(i)
-                }
-            } else {
-                var filtered = viewModel.pokemons.filter { pokemon -> pokemon.type.contains(it) }
-                viewModel.clear()
-                for (i in filtered) {
-                    viewModel.addPokemon(i)
-                }
-            }
+            println("[SearchBar] Searching for $query")
+            navController.navigate("search/$query")
         })
-        PokemonList(viewModel.pokemons, navController)
+        PokemonList(items, navController)
     }
 }
 
 @Composable
-fun PokemonList(pokemons: SnapshotStateList<PokemonEntity>, navController: NavHostController) {
+fun PokemonList(pokemon: List<PokemonEntity>, navController: NavHostController) {
     LazyVerticalGrid(modifier = Modifier.padding(top = 60.dp), columns = GridCells.Fixed(2)) {
 
-        items(pokemons.size) { index ->
-            PokemonItem(pokemons[index], navController)
+        items(pokemon) { item ->
+            PokemonItem(item, navController)
         }
     }
 }
@@ -251,7 +238,7 @@ fun PokemonThumbnail(thumbnail: String, modifier: Modifier = Modifier) {
             .memoryCachePolicy(CachePolicy.ENABLED)
             .diskCachePolicy(CachePolicy.ENABLED)
             .build(),
-        contentDescription = "Pokemon Image",
+        contentDescription = "me.ariy.mydex.data.pokemon.entity.species.Pokemon Image",
         contentScale = ContentScale.Crop,
         modifier = modifier
             .size(96.dp)
@@ -263,7 +250,7 @@ fun PokemonThumbnail(thumbnail: String, modifier: Modifier = Modifier) {
 //            .data(thumbnail)
 //            .crossfade(true)
 //            .build(),
-//        contentDescription = "Pokemon Image",
+//        contentDescription = "me.ariy.mydex.data.pokemon.entity.species.Pokemon Image",
 //        contentScale = ContentScale.Crop,
 //        modifier = modifier
 //            .size(96.dp)
@@ -300,7 +287,7 @@ fun SearchBarApp(
             placeholder = {
                 Text(
                     modifier = Modifier.alpha(ContentAlpha.medium),
-                    text = "Search Pokemon",
+                    text = "Search me.ariy.mydex.data.pokemon.entity.species.Pokemon",
                     color = Color.Black
                 )
             },
@@ -394,7 +381,7 @@ fun RowScope.AddItem(
         },
         icon = {
             Icon(
-                imageVector = screen.icon,
+                imageVector = ImageVector.vectorResource(id = screen.icon),
                 contentDescription = "Navigation Icon",
             )
         },
@@ -402,7 +389,7 @@ fun RowScope.AddItem(
             it.route == screen.route
         } == true,
         onClick = {
-            navController.navigate(screen.route){
+            navController.navigate(screen.route) {
                 popUpTo(navController.graph.findStartDestination().id)
                 launchSingleTop = true
             }

@@ -16,7 +16,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         var db = AppDatabase.getInstance(applicationContext)
         println("Database exist? " + doesDatabaseExist(applicationContext, "mydex"))
-
         setContent {
             MyDexTheme {
                 MainScreen()

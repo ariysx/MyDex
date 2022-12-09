@@ -17,13 +17,13 @@ private val LightColorPalette = lightColors(
     primaryVariant = Purple700,
     secondary = Teal200
 
-    /* Other default colors to override
-    background = Color.White,
-    surface = Color.White,
-    onPrimary = Color.White,
-    onSecondary = Color.Black,
-    onBackground = Color.Black,
-    onSurface = Color.Black,
+    /* me.ariy.mydex.data.pokemon.entity.sample.Other default colors to override
+    background = me.ariy.mydex.data.pokemon.entity.species.Color.White,
+    surface = me.ariy.mydex.data.pokemon.entity.species.Color.White,
+    onPrimary = me.ariy.mydex.data.pokemon.entity.species.Color.White,
+    onSecondary = me.ariy.mydex.data.pokemon.entity.species.Color.me.ariy.mydex.data.pokemon.entity.sample.Black,
+    onBackground = me.ariy.mydex.data.pokemon.entity.species.Color.me.ariy.mydex.data.pokemon.entity.sample.Black,
+    onSurface = me.ariy.mydex.data.pokemon.entity.species.Color.me.ariy.mydex.data.pokemon.entity.sample.Black,
     */
 )
 

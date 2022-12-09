@@ -1,6 +1,7 @@
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
+import android.app.Application
 import android.content.Context
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -18,7 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
@@ -26,7 +29,10 @@ import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
 import me.ariy.mydex.data.myteam.MyTeamPokemonViewModel
+import me.ariy.mydex.data.myteam.MyTeamViewModel
+import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
+import me.ariy.mydex.data.pokemon.PokemonViewModel
 import me.ariy.mydex.ui.theme.Green
 import me.ariy.mydex.ui.theme.Red
 import java.util.*
@@ -35,19 +41,22 @@ import java.util.*
 fun ViewTeamScreen(
     name: String,
     navController: NavHostController,
-    viewModel: MyTeamPokemonViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 ) {
 
     val context = LocalContext.current
-    val team = AppDatabase.getInstance(context).myteamDao().findById(name)
-    ViewTeam(team, context, navController, viewModel)
+    val teamViewModel: MyTeamViewModel = viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
+    val team = teamViewModel.findById(name)
+
+    val myTeamPokemonViewModel: MyTeamPokemonViewModel = viewModel()
+    println(team)
+    ViewTeam(teamViewModel = teamViewModel, team, navController, myTeamPokemonViewModel)
 
 }
 
 @Composable
 fun ViewTeam(
+    teamViewModel : MyTeamViewModel,
     team: MyTeamEntity,
-    context: Context,
     navController: NavHostController,
     viewModel: MyTeamPokemonViewModel
 ) {
@@ -63,14 +72,14 @@ fun ViewTeam(
             viewModel.add(PokemonTypeConverter.stringToPokemonEntity(pokemons[i]))
         }
     }
-    var teamScore = 0f
+    var teamScore = 0
 
     fun updateTeamScore() {
         for (i in pokemon.indices) {
-            var pokemonScore: Float = 0f
+            var pokemonScore = 0
             val pokemonStats = MapTypeConverter.stringToMap(pokemon[i].baseStats)
             pokemonStats.forEach { entry ->
-                pokemonScore += entry.value.toFloat()
+                pokemonScore += entry.value.toInt()
             }
             teamScore += pokemonScore
         }
@@ -79,9 +88,9 @@ fun ViewTeam(
 
     Surface() {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(text = team.uuid)
-            Text(text = "Team Combat Power: $teamScore")
-            MyTeamPokemonContent(viewModel = viewModel, onCardClicked = {
+            Text(text = team.name, style = MaterialTheme.typography.h5, modifier = Modifier.padding(8.dp, 0.dp))
+            Text(text = "Team Combat Power: ${teamScore}", modifier = Modifier.padding(8.dp, 0.dp))
+            MyTeamPokemonContent(teamViewModel = teamViewModel, viewModel = viewModel, onCardClicked = {
                 navController.navigate(
                     "team/{team}/{name}"
                         .replace(
@@ -104,6 +113,7 @@ fun ViewTeam(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun MyTeamPokemonContent(
+    teamViewModel: MyTeamViewModel,
     viewModel: MyTeamPokemonViewModel,
     context: Context = LocalContext.current,
     dismissed: (listItem: PokemonEntity) -> Unit = {},
@@ -125,8 +135,9 @@ fun MyTeamPokemonContent(
                 for (i in pokemons.indices) {
                     pokemonString.add(PokemonTypeConverter.pokemonEntityToString(pokemons[i]))
                 }
-                AppDatabase.getInstance(context).myteamDao()
-                    .updatePokemon(team.uuid, ListTypeConverter.listToString(pokemonString))
+                team.pokemon = ListTypeConverter.listToString(pokemonString)
+                teamViewModel.updateTeam(team)
+
                 println("Removing: " + pokemon.uuid)
             }
             SwipeToDismiss(
@@ -180,13 +191,23 @@ fun MyTeamPokemonContent(
                             onCardClicked(pokemon.uid)
                         }
                     ) {
-                        Column() {
+                        Row(
+                            modifier = Modifier.background(color = getTypeColor(text = ListTypeConverter.stringToList(pokemon.type)[0]).copy(0.3f))
+                        ) {
                             PokemonThumbnail(thumbnail = pokemon.thumbnail)
                             var name = pokemon.nickname
                             if(name.isEmpty()){
                                 name = pokemon.uuid
                             }
-                            Text(text = "$name")
+                            Column() {
+                                Text(text = name.replaceFirstChar {
+                                    if (it.isLowerCase()) it.titlecase(
+                                        Locale.ROOT
+                                    ) else it.toString()
+                                }, style = MaterialTheme.typography.h6)
+                                val cp = getCombatPower(pokemon)
+                                Text(text = "$cp Combat Power")
+                            }
                         }
                     }
                 }
