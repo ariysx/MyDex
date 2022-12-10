@@ -121,7 +121,7 @@ fun Screen(
                     brush = Brush.verticalGradient(
                         colors = listOf(
                             bg,
-                            Color.White
+                            MaterialTheme.colors.background
                         )
                     )
                 )
@@ -141,7 +141,8 @@ fun Screen(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier
                         .background(
-                            color = Color.White.copy(alpha = 0.9f),
+//                            color = Color.White.copy(alpha = 0.9f),
+                            color = MaterialTheme.colors.background.copy(alpha = 0.9f),
                             shape = RoundedCornerShape(5)
                         )
                         .padding(15.dp, 50.dp, 15.dp, 25.dp)

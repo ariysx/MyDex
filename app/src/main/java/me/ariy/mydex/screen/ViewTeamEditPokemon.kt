@@ -83,7 +83,7 @@ fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: S
                         brush = Brush.verticalGradient(
                             colors = listOf(
                                 getTypeColor(ListTypeConverter.stringToList(pokemonEntity.type)[0]),
-                                Color.White
+                                MaterialTheme.colors.background
                             )
                         )
                     )
@@ -105,7 +105,7 @@ fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: S
                     verticalArrangement = Arrangement.spacedBy(15.dp),
                     modifier = Modifier
                         .background(
-                            color = Color.White.copy(alpha = 0.9f),
+                            color = MaterialTheme.colors.background.copy(alpha = 0.9f),
                             shape = RoundedCornerShape(5)
                         )
                         .padding(15.dp, 50.dp, 15.dp, 25.dp)
