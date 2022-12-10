@@ -28,10 +28,20 @@ interface PokemonDao {
     suspend fun removeAll()
 
     @Query("SELECT * FROM pokemon WHERE type LIKE '%' || :type || '%'")
-    suspend fun searchType(type: String) : List<PokemonEntity>
+    fun searchType(type: String) : List<PokemonEntity>
 
     @Query("SELECT * FROM pokemon WHERE uuid LIKE '%' || :name || '%'")
-    suspend fun searchName(name: String) : List<PokemonEntity>
+    fun searchName(name: String) : List<PokemonEntity>
+
+    @Query("SELECT * FROM pokemon WHERE isLegendary = 1")
+    fun searchLegendary() : List<PokemonEntity>
+
+    @Query("SELECT * FROM pokemon WHERE isMythical = 1")
+    fun searchMythical() : List<PokemonEntity>
+
+    @Query("SELECT COUNT(*) FROM pokemon WHERE type LIKE '%' || :type || '%'")
+    fun countByType(type: String) : Int
+
 
 //    @Delete
 //    fun delete(pokemon: me.ariy.mydex.data.pokemon.entity.species.Pokemon)

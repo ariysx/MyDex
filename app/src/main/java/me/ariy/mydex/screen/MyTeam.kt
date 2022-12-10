@@ -68,7 +68,7 @@ fun MyTeamList(viewModel: MyTeamViewModel, navController: NavHostController, con
     Surface() {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
 
-            Text(text = "MyTeam", style = MaterialTheme.typography.h5)
+            Text(text = "MyTeam", style = MaterialTheme.typography.h5,modifier = Modifier.padding(8.dp, 0.dp))
 
             MyTeamAddBar(onCloseClicked = {
 
@@ -110,15 +110,16 @@ fun MyTeamAddBar(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(8.dp, 0.dp)
             .height(56.dp),
-        shape = RoundedCornerShape(50),
+//        shape = RoundedCornerShape(50),
         elevation = AppBarDefaults.TopAppBarElevation,
         color = MaterialTheme.colors.background,
     ) {
         TextField(
             modifier = Modifier
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(50),
+//            shape = RoundedCornerShape(50),
             value = text,
             onValueChange = {
                 text = it

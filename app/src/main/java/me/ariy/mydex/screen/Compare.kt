@@ -9,10 +9,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Close
@@ -59,6 +56,7 @@ fun CompareScreen(navController: NavHostController) {
 
     Surface() {
         Column(modifier = Modifier.padding(10.dp)) {
+            Text(text = "Compare Pokemon", style = MaterialTheme.typography.h5)
             SearchableExpandedDropDownMenu(
                 listOfItems = pokemon, // provide the list of items of any type you want to populated in the dropdown,
                 modifier = Modifier.fillMaxWidth().padding(0.dp, 2.dp, ),

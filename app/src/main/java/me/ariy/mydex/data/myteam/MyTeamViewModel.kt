@@ -54,4 +54,10 @@ class MyTeamViewModel(application: Application) : AndroidViewModel(application) 
         }
         return myTeamEntity
     }
+
+    fun removeAll() {
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.removeAllTeam()
+        }
+    }
 }

@@ -28,4 +28,8 @@ class MyTeamRepository(private val myTeamDao: MyTeamDao) {
     suspend fun findById(uuid: String): MyTeamEntity {
         return myTeamDao.findById(uuid)
     }
+
+    suspend fun removeAllTeam(){
+        myTeamDao.removeAll()
+    }
 }

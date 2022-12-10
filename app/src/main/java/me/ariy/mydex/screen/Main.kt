@@ -32,6 +32,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
@@ -70,11 +71,11 @@ fun MyDexApp(
 //    viewModel.syncCloud()
 
     thread {
-        val count = AppDatabase.getInstance(context.applicationContext).pokemonDao().countPokemon()
-        if (count == 0) {
+//        val count = AppDatabase.getInstance(context.applicationContext).pokemonDao().countPokemon()
+//        if (count == 0) {
             println("[CloudSync] Initialising...")
             viewModel.syncCloud()
-        }
+//        }
     }
     viewModel.pokemon.value?.sortedBy { it.pokedexID }
 
@@ -82,11 +83,10 @@ fun MyDexApp(
 
 
     println("[Database] Pokemon In Database: ${items.size}")
-    viewModel.syncCloud()
+//    viewModel.syncCloud()
 
     Scaffold()
     {
-
         SearchBarApp(onCloseClicked = {
 //            navController.navigate("home")
         }, onSearchClicked = {
@@ -100,7 +100,7 @@ fun MyDexApp(
 
 @Composable
 fun PokemonList(pokemon: List<PokemonEntity>, navController: NavHostController) {
-    LazyVerticalGrid(modifier = Modifier.padding(top = 60.dp), columns = GridCells.Fixed(2)) {
+    LazyVerticalGrid(modifier = Modifier.padding(top = 70.dp), columns = GridCells.Fixed(2)) {
 
         items(pokemon) { item ->
             PokemonItem(item, navController)
@@ -129,6 +129,7 @@ fun PokemonItem(pokemon: PokemonEntity, navController: NavHostController) {
         shape = RoundedCornerShape(5),
         modifier = Modifier
             .padding(8.dp)
+            .fillMaxSize()
             .clickable(
                 onClick = {
 //                    Toast
@@ -138,6 +139,11 @@ fun PokemonItem(pokemon: PokemonEntity, navController: NavHostController) {
 //                    intent.putExtra("pokemon", pokemon)
 //                    startActivity(context, intent, null)
 
+                    println("navigating to pokemon/{name}"
+                        .replace(
+                            oldValue = "{name}",
+                            newValue = pokemon.uuid
+                        ))
                     navController.navigate(
                         "pokemon/{name}"
                             .replace(
@@ -151,17 +157,13 @@ fun PokemonItem(pokemon: PokemonEntity, navController: NavHostController) {
     ) {
         Column(
             modifier = Modifier
-                .animateContentSize(
-                    animationSpec = spring(
-                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                        stiffness = Spring.StiffnessLow
-                    )
-                )
+                .fillMaxSize()
                 .background(color = bg.copy(alpha = 0.3f), shape = RoundedCornerShape(5))
 
         ) {
             Column(
                 modifier = Modifier
+                    .fillMaxSize()
                     .fillMaxWidth()
                     .padding(8.dp)
             ) {
@@ -270,15 +272,16 @@ fun SearchBarApp(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(8.dp, 0.dp)
             .height(56.dp),
-        shape = RoundedCornerShape(50),
+//        shape = RoundedCornerShape(50),
         elevation = AppBarDefaults.TopAppBarElevation,
         color = MaterialTheme.colors.background,
     ) {
         TextField(
             modifier = Modifier
                 .fillMaxWidth(),
-            shape = RoundedCornerShape(50),
+//            shape = RoundedCornerShape(50),
             value = text,
             onValueChange = {
                 text = it
@@ -287,7 +290,7 @@ fun SearchBarApp(
             placeholder = {
                 Text(
                     modifier = Modifier.alpha(ContentAlpha.medium),
-                    text = "Search me.ariy.mydex.data.pokemon.entity.species.Pokemon",
+                    text = "Search Pokemon, Type",
                     color = Color.Black
                 )
             },
@@ -377,7 +380,7 @@ fun RowScope.AddItem(
 ) {
     BottomNavigationItem(
         label = {
-            Text(text = screen.title)
+            Text(text = screen.title, fontSize = 10.sp)
         },
         icon = {
             Icon(

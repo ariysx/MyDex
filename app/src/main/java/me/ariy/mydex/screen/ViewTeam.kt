@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -20,6 +21,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.capitalize
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -44,7 +46,8 @@ fun ViewTeamScreen(
 ) {
 
     val context = LocalContext.current
-    val teamViewModel: MyTeamViewModel = viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
+    val teamViewModel: MyTeamViewModel =
+        viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
     val team = teamViewModel.findById(name)
 
     val myTeamPokemonViewModel: MyTeamPokemonViewModel = viewModel()
@@ -55,7 +58,7 @@ fun ViewTeamScreen(
 
 @Composable
 fun ViewTeam(
-    teamViewModel : MyTeamViewModel,
+    teamViewModel: MyTeamViewModel,
     team: MyTeamEntity,
     navController: NavHostController,
     viewModel: MyTeamPokemonViewModel
@@ -88,23 +91,49 @@ fun ViewTeam(
 
     Surface() {
         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(text = team.name, style = MaterialTheme.typography.h5, modifier = Modifier.padding(8.dp, 0.dp))
+            Text(
+                text = team.name,
+                style = MaterialTheme.typography.h5,
+                modifier = Modifier.padding(8.dp, 0.dp)
+            )
             Text(text = "Team Combat Power: ${teamScore}", modifier = Modifier.padding(8.dp, 0.dp))
-            MyTeamPokemonContent(teamViewModel = teamViewModel, viewModel = viewModel, onCardClicked = {
-                navController.navigate(
-                    "team/{team}/{name}"
-                        .replace(
-                            oldValue = "{team}",
-                            newValue = team.uuid
-                        )
-                        .replace(
-                            oldValue = "{name}",
-                            newValue = it
-                        )
-                )
-            }, team = team, pokemons = pokemon, updateTeamScore = {
-                updateTeamScore()
-            })
+            if (viewModel.pokemon.isEmpty() || viewModel.pokemon.size == 0) {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "This team does not have a pokemon.\nGo to Pokedex and get started!", textAlign = TextAlign.Center)
+                    Button(onClick = {
+                        navController.navigate("home")
+                    }, shape = RoundedCornerShape(50)) {
+                        Text(text = "Go to Pokedex")
+                    }
+                }
+            }
+            MyTeamPokemonContent(
+                teamViewModel = teamViewModel,
+                viewModel = viewModel,
+                onCardClicked = {
+                    navController.navigate(
+                        "team/{team}/{name}"
+                            .replace(
+                                oldValue = "{team}",
+                                newValue = team.uuid
+                            )
+                            .replace(
+                                oldValue = "{name}",
+                                newValue = it
+                            )
+                    )
+                },
+                team = team,
+                pokemons = pokemon,
+                updateTeamScore = {
+                    updateTeamScore()
+                },
+                navController = navController
+            )
         }
     }
 }
@@ -121,6 +150,7 @@ fun MyTeamPokemonContent(
     team: MyTeamEntity,
     pokemons: ArrayList<PokemonEntity>,
     updateTeamScore: () -> Unit,
+    navController: NavHostController,
 ) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
         items(items = viewModel.pokemon, key = { item -> item.uid }) { pokemon ->
@@ -192,11 +222,17 @@ fun MyTeamPokemonContent(
                         }
                     ) {
                         Row(
-                            modifier = Modifier.background(color = getTypeColor(text = ListTypeConverter.stringToList(pokemon.type)[0]).copy(0.3f))
+                            modifier = Modifier.background(
+                                color = getTypeColor(
+                                    text = ListTypeConverter.stringToList(
+                                        pokemon.type
+                                    )[0]
+                                ).copy(0.3f)
+                            )
                         ) {
                             PokemonThumbnail(thumbnail = pokemon.thumbnail)
                             var name = pokemon.nickname
-                            if(name.isEmpty()){
+                            if (name.isEmpty()) {
                                 name = pokemon.uuid
                             }
                             Column() {

@@ -12,6 +12,10 @@ object MapTypeConverter {
         return Gson().fromJson(value,  object : TypeToken<Map<String, String>>() {}.type)
     }
 
+    fun stringToMapInt(value: String): Map<String, Int> {
+        return Gson().fromJson(value,  object : TypeToken<Map<String, Int>>() {}.type)
+    }
+
     @TypeConverter
     @JvmStatic
     fun mapToString(value: Map<String, Int>?): String {

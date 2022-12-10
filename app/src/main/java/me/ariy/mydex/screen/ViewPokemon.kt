@@ -33,7 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import coil.ImageLoader
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.google.accompanist.flowlayout.FlowRow
@@ -58,14 +60,25 @@ fun ViewPokemonScreen(name: String, navController: NavHostController) {
     val context = LocalContext.current
     val viewModel: PokemonViewModel = viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
     val pokemon = viewModel.getPokemon(name)
-    Screen(viewModel, pokemon, context, navController)
+    println(name)
+    if(pokemon.uuid.isNotEmpty()){
+        println(pokemon.toString())
+        Screen(viewModel, context, navController, name)
+    }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Screen(viewModel: PokemonViewModel, pokemonEntity: PokemonEntity, context: Context, navController: NavHostController) {
-    val baseStats = MapTypeConverter.stringToMap(pokemonEntity.baseStats)
+fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHostController, name: String) {
+    val pokemonEntity by remember { mutableStateOf(viewModel.getPokemon(name)) }
+    if(pokemonEntity.uuid.isEmpty()){
+        return
+    }
+
+    val baseStats = MapTypeConverter.stringToMapInt(pokemonEntity.baseStats)
+
     val type = ListTypeConverter.stringToList(pokemonEntity.type)
+
     var bg = Color.Gray
     when (type[0]) {
         "fire" -> bg = me.ariy.mydex.ui.theme.DeepOrange
@@ -173,55 +186,60 @@ fun Screen(viewModel: PokemonViewModel, pokemonEntity: PokemonEntity, context: C
                     Box (
                         contentAlignment = Center
                     ) {
-                        FlowRow(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(8.dp),
-                        ) {
-                            if (ListTypeConverter.stringToList(pokemonEntity.nextEvolution).size != 1) {
-                                for (nextEvo in ListTypeConverter.stringToList(pokemonEntity.nextEvolution)) {
-                                    Card(
-                                        onClick = {
-                                            navController.navigate(
-                                                "pokemon/{name}"
-                                                    .replace(
-                                                        oldValue = "{name}",
-                                                        newValue = nextEvo
-                                                    )
-                                            )
-                                        }, modifier = Modifier
-                                            .background(Color.Transparent)
-                                            .padding(4.dp)
-                                            .wrapContentSize(Alignment.Center),
+                        if(pokemonEntity.nextEvolution.isNotEmpty()){
+//                        if(pokemonEntity != null || pokemonEntity.nextEvolution != null || pokemonEntity.nextEvolution.isNotEmpty()){
 
-                                    ) {
-                                        Column(
+                            FlowRow(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp),
+                            ) {
+                                val nextEvoList = ListTypeConverter.stringToList(pokemonEntity.nextEvolution!!)
+                                if (nextEvoList.isNotEmpty() && nextEvoList.size != 1) {
+                                    for (nextEvo in nextEvoList) {
+                                        Card(
+                                            onClick = {
+                                                navController.navigate(
+                                                    "pokemon/{name}"
+                                                        .replace(
+                                                            oldValue = "{name}",
+                                                            newValue = nextEvo
+                                                        )
+                                                )
+                                            }, modifier = Modifier
+                                                .background(Color.Transparent)
+                                                .padding(4.dp)
+                                                .wrapContentSize(Alignment.Center),
+
+                                            ) {
+                                            Column(
 //                                            modifier = Modifier.fillMaxSize(),
-                                            verticalArrangement = Arrangement.Center,
-                                            horizontalAlignment = Alignment.CenterHorizontally
-                                        ) {
-                                            Box(contentAlignment = Alignment.Center){
-                                                if(viewModel.getPokemon(nextEvo) != null){
-                                                    Thumbnail(
-                                                        thumbnail = viewModel.getPokemon(nextEvo).thumbnail,
-                                                    )
+                                                verticalArrangement = Arrangement.Center,
+                                                horizontalAlignment = Alignment.CenterHorizontally
+                                            ) {
+                                                Box(contentAlignment = Alignment.Center){
+                                                    if(viewModel.getPokemon(nextEvo) != null){
+                                                        Thumbnail(
+                                                            thumbnail = viewModel.getPokemon(nextEvo).thumbnail,
+                                                        )
+                                                    }
                                                 }
-                                            }
-                                            Box(contentAlignment = Center){
-                                                Text(text = nextEvo.replaceFirstChar {
-                                                    if (it.isLowerCase()) it.titlecase(
-                                                        Locale.ROOT
-                                                    ) else it.toString()
-                                                }, textAlign = TextAlign.Center)
+                                                Box(contentAlignment = Center){
+                                                    Text(text = nextEvo.replaceFirstChar {
+                                                        if (it.isLowerCase()) it.titlecase(
+                                                            Locale.ROOT
+                                                        ) else it.toString()
+                                                    }, textAlign = TextAlign.Center)
+                                                }
                                             }
                                         }
                                     }
+                                } else {
+                                    Text(
+                                        text = "This pokemon has no evolution",
+                                        textAlign = TextAlign.Center
+                                    )
                                 }
-                            } else {
-                                Text(
-                                    text = "This pokemon has no evolution",
-                                    textAlign = TextAlign.Center
-                                )
                             }
                         }
                     }
@@ -373,18 +391,38 @@ fun PreviewStatsBar() {
 
 @Composable
 fun PokemonImage(thumbnail: String, modifier: Modifier = Modifier) {
-    AsyncImage(
-        model = ImageRequest.Builder(LocalContext.current).data(thumbnail).crossfade(false)
-            .memoryCachePolicy(CachePolicy.ENABLED)
-            .diskCachePolicy(CachePolicy.ENABLED).build(),
-        contentDescription = "me.ariy.mydex.data.pokemon.entity.species.Pokemon Image",
-        contentScale = ContentScale.Fit,
-        alignment = Alignment.Center,
-        modifier = modifier
-            .size(256.dp)
-            .padding(8.dp)
-//            .clip(RoundedCornerShape(50)),
-    )
+    val context = LocalContext.current
+    key(thumbnail) {
+        Image(
+            rememberAsyncImagePainter(
+                remember(thumbnail) {
+                    ImageRequest.Builder(context)
+                        .data(thumbnail)
+                        .diskCacheKey(thumbnail)
+                        .memoryCacheKey(thumbnail)
+                        .build()
+                },
+            ),
+            contentDescription = "Pokemon Image",
+            contentScale = ContentScale.Fit,
+            alignment = Alignment.Center,
+            modifier = modifier
+                .size(256.dp)
+                .padding(8.dp)
+        )
+    }
+//    AsyncImage(
+//        model = ImageRequest.Builder(LocalContext.current).data(thumbnail).crossfade(false)
+//            .memoryCachePolicy(CachePolicy.ENABLED)
+//            .diskCachePolicy(CachePolicy.ENABLED).build(),
+//        contentDescription = "Pokemon Image",
+//        contentScale = ContentScale.Fit,
+//        alignment = Alignment.Center,
+//        modifier = modifier
+//            .size(256.dp)
+//            .padding(8.dp)
+////            .clip(RoundedCornerShape(50)),
+//    )
 }
 
 @Composable

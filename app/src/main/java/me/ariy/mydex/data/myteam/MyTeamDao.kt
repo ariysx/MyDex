@@ -29,6 +29,10 @@ interface MyTeamDao {
 
     @Insert
     fun insertOnCreate(myTeamEntity: MyTeamEntity)
+
+    @Query("DELETE FROM myteam")
+    fun removeAll()
+
 //
 //    @Query("UPDATE myteam SET pokemon = :pokemon WHERE uuid = :id")
 //    suspend fun updatePokemon(id: String, pokemon: String)

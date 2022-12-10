@@ -11,6 +11,10 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
 
     var pokemon : LiveData<List<PokemonEntity>> = pokemonDao.getAll()
 
+    suspend fun getAll(){
+        pokemon = pokemonDao.getAll()
+    }
+
     suspend fun addPokemon(pokemonEntity: PokemonEntity){
         try {
             pokemonDao.insert(pokemonEntity)
@@ -27,7 +31,7 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
         pokemonDao.remove(pokemonEntity)
     }
 
-    suspend fun getPokemon(name: String): PokemonEntity {
+     fun getPokemon(name: String): PokemonEntity {
         return pokemonDao.findByName(name)
     }
 
@@ -45,5 +49,17 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
 
     suspend fun searchName(name: String): List<PokemonEntity> {
         return pokemonDao.searchName(name)
+    }
+
+    suspend fun searchLegendary(): List<PokemonEntity> {
+        return pokemonDao.searchLegendary()
+    }
+
+    suspend fun searchMythical(): List<PokemonEntity> {
+        return pokemonDao.searchMythical()
+    }
+
+    fun countByType(type: String) : Int {
+        return pokemonDao.countByType(type)
     }
 }

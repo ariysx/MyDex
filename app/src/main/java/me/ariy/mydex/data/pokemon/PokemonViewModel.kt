@@ -77,26 +77,55 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun searchByName(s: String) : List<PokemonEntity> {
-        var count: List<PokemonEntity> = emptyList()
+        var pokemon: List<PokemonEntity> = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.searchName(s)
-            count = response
+            pokemon = response
         }
-        println(count.toString())
-        return count
+        return pokemon
     }
 
     fun searchByType(s: String) : List<PokemonEntity> {
-        var count: List<PokemonEntity> = emptyList()
+        var pokemon: List<PokemonEntity> = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.searchType(s)
+            pokemon = response
+        }
+        return pokemon
+    }
+
+    fun getAll(){
+        viewModelScope.launch(Dispatchers.IO) {
+            repository.getAll()
+            pokemon = repository.pokemon
+        }
+    }
+
+    fun searchLegendary() : List<PokemonEntity> {
+        var pokemon: List<PokemonEntity> = emptyList()
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repository.searchLegendary()
+            pokemon = response
+        }
+        return pokemon
+    }
+
+    fun searchMythical() : List<PokemonEntity> {
+        var pokemon: List<PokemonEntity> = emptyList()
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repository.searchMythical()
+            pokemon = response
+        }
+        return pokemon
+    }
+
+    fun countByType(type: String) : Int {
+        var count = 0
+        viewModelScope.launch(Dispatchers.IO) {
+            val response = repository.countByType(type)
             count = response
         }
         return count
-    }
-
-    fun clear(){
-
     }
 
     /*
@@ -116,9 +145,9 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                 println("[CloudSync] Pokemon Count: " + pokeData.count)
 
                 for (i in 0 until pokeData.results.size) {
-                    if(pokemon.value != null && pokeData.count == (pokemon.value?.size?.plus(1))){
-                        break
-                    }
+//                    if(pokemon.value != null && pokeData.count == (pokemon.value?.size?.plus(1))){
+//                        break
+//                    }
 
                     if (getPokemon(pokeData.results[i].name) != null) {
                         continue
@@ -161,28 +190,32 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                     pokemonEntity.pokedexID = speciesData.id
 
                     if(speciesData != null || speciesData.evolution_chain != null){
-                        val evolutionsData =
-                            retrofitAPI.getPokemonEvolutions(speciesData.evolution_chain.url)
+                        try {
+                            val evolutionsData =
+                                retrofitAPI.getPokemonEvolutions(speciesData.evolution_chain.url)
 
-                        val evolutionTree = ArrayList<String>()
-                        if (evolutionsData != null || evolutionsData.chain != null || evolutionsData.chain.evolves_to != null || evolutionsData.chain.evolves_to.size != 0) {
-                            // First evolution
-                            evolutionTree.add(evolutionsData.chain.species.name)
-                            // Second evolution
-                            evolutionsData.chain.evolves_to.forEach {
+                            val evolutionTree = ArrayList<String>()
+                            if (evolutionsData != null || evolutionsData.chain != null || evolutionsData.chain.evolves_to != null || evolutionsData.chain.evolves_to.size != 0) {
+                                // First evolution
+                                evolutionTree.add(evolutionsData.chain.species.name)
+                                // Second evolution
+                                evolutionsData.chain.evolves_to.forEach {
 //                            println("[Evolution Tree] ${it.species.name}")
-                                evolutionTree.add(it.species.name)
-                                // Third evolution
-                                if(it.evolves_to != null){
-                                    it.evolves_to.forEach {
-                                        evolutionTree.add(it.species.name)
+                                    evolutionTree.add(it.species.name)
+                                    // Third evolution
+                                    if(it.evolves_to != null){
+                                        it.evolves_to.forEach {
+                                            evolutionTree.add(it.species.name)
+                                        }
                                     }
                                 }
                             }
-                        }
 //                    println("[EvolutionTree] ${evolutionTree}")
-                        pokemonEntity.nextEvolution = ListTypeConverter.listToString(evolutionTree)
+                            pokemonEntity.nextEvolution = ListTypeConverter.listToString(evolutionTree)
 
+                        } catch (e: java.lang.NullPointerException){
+                            pokemonEntity.nextEvolution = ""
+                        }
                     }
                     if( getPokemon(pokemonEntity.uuid) != null){
                         addPokemon(pokemonEntity)
@@ -191,6 +224,8 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: IOException) {
                 println(e.stackTraceToString())
             } catch (e: HttpException) {
+                println(e.stackTraceToString())
+            } catch (e: Exception){
                 println(e.stackTraceToString())
             }
         }
