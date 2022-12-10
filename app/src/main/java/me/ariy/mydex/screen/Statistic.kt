@@ -1,3 +1,8 @@
+/**
+ * Class that holds multiple JetPack composable component for the Statistics
+ * screen
+ */
+
 package me.ariy.mydex.screen
 
 import android.app.Application
@@ -14,11 +19,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import me.ariy.mydex.data.myteam.MyTeamViewModel
-import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
+import me.ariy.mydex.data.myteam.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.data.pokemon.PokemonViewModel
 import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
-import java.util.*
 
 @Composable
 fun Statistic(

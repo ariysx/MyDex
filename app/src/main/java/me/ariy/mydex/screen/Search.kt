@@ -1,3 +1,8 @@
+/**
+ * Class that holds multiple JetPack composable component for the Search
+ * screen
+ */
+
 package me.ariy.mydex.screen
 
 import android.app.Application
@@ -6,6 +11,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -43,15 +49,34 @@ fun SearchScreen(navController: NavHostController, query: String) {
         "grass" -> type = "grass"
     }
 
-    var items: List<PokemonEntity> = if(type.isNotEmpty()){
-        pokemonViewModel.searchByType(type)
+    val observeItems = pokemonViewModel.pokemon.observeAsState(listOf()).value
+    val items = ArrayList<PokemonEntity>()
+
+    if(type.isNotEmpty()){
+        observeItems.forEach {
+            if(it.type.contains(type)){
+                items.add(it)
+            }
+        }
+    }
+
+    if(query.contains("legendary")){
+        observeItems.forEach {
+            if(it.isLegendary){
+                items.add(it)
+            }
+        }
+    } else if(query.contains("mythical")){
+        observeItems.forEach {
+            if(it.isMythical){
+                items.add(it)
+            }
+        }
     } else {
-        if(query == "legendary"){
-            pokemonViewModel.searchLegendary()
-        } else if (query == "mythical"){
-            pokemonViewModel.searchMythical()
-        } else {
-            pokemonViewModel.searchByName(query)
+        observeItems.forEach {
+            if(it.uuid.contains(query)){
+                items.add(it)
+            }
         }
     }
 

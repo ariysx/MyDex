@@ -1,3 +1,9 @@
+/**
+ * Factory model to return a new ViewModel instance of PokemonViewModel
+ * Constructor with application to get context
+ * Reference: https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-factories
+ */
+
 package me.ariy.mydex.data.pokemon
 
 import android.app.Application

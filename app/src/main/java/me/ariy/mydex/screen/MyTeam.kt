@@ -1,3 +1,8 @@
+/**
+ * Class that holds multiple JetPack composable component for the MyTeam
+ * screen
+ */
+
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
@@ -8,11 +13,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyHorizontalGrid
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
@@ -29,24 +30,19 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.google.accompanist.flowlayout.FlowRow
-import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
-import me.ariy.mydex.data.myteam.MyTeamRepository
 import me.ariy.mydex.data.myteam.MyTeamViewModel
-import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
-import me.ariy.mydex.data.pokemon.PokemonEntity
+import me.ariy.mydex.data.myteam.MyTeamViewModelFactory
 import me.ariy.mydex.ui.theme.Green
 import me.ariy.mydex.ui.theme.Red
 import java.util.*
-import kotlin.concurrent.thread
 
 @Composable
 fun MyTeamScreen(

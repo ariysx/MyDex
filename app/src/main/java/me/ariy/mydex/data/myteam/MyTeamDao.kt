@@ -1,3 +1,8 @@
+/**
+ * Data Access Object via Room for the MyTeam Table
+ * Insert, Update, Delete and Queries
+ */
+
 package me.ariy.mydex.data.myteam
 
 import androidx.lifecycle.LiveData

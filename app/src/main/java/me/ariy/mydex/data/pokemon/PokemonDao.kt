@@ -1,3 +1,8 @@
+/**
+ * Data Access Object via Room for the Pokemon Table
+ * Insert, Update, Delete and Queries
+ */
+
 package me.ariy.mydex.data.pokemon
 
 import androidx.lifecycle.LiveData

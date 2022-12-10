@@ -1,3 +1,8 @@
+/**
+ * Class that holds multiple JetPack composable component for the View the selected team
+ * screen
+ */
+
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
@@ -21,21 +26,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.capitalize
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
 import me.ariy.mydex.data.myteam.MyTeamPokemonViewModel
 import me.ariy.mydex.data.myteam.MyTeamViewModel
-import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
+import me.ariy.mydex.data.myteam.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
-import me.ariy.mydex.data.pokemon.PokemonViewModel
 import me.ariy.mydex.ui.theme.Green
 import me.ariy.mydex.ui.theme.Red
 import java.util.*

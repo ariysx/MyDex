@@ -1,3 +1,7 @@
+/**
+ * ViewModel class to interact with Room using Repository as a constructor by default
+ * Therefore the ViewModel will always be attached to the repository
+ */
 package me.ariy.mydex.data.pokemon
 
 import android.app.Application
@@ -21,6 +25,10 @@ import kotlin.collections.find
 import kotlin.collections.forEach
 import kotlin.collections.set
 
+/*
+ViewModel class with constructor of Application to get the context so that
+Room does not run on main thread and block the UI
+ */
 class PokemonViewModel(application: Application) : AndroidViewModel(application) {
 
     var pokemon: LiveData<List<PokemonEntity>>
@@ -150,6 +158,11 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
     https://www.howtodoandroid.com/retrofit-android-example-kotlin/
      */
 
+    /*
+        SyncCloud to retrieve data using various classes to modify API's data to match
+        the specified PokemonEntity object
+        Utilises Retrofit for fetching of data
+     */
     //    private val lock = Mutex()
     fun syncCloud() {
 //        lock.withLock {

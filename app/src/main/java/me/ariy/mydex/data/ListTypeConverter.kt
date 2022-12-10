@@ -1,3 +1,7 @@
+/**
+ * Type Converter class for transforming Type to Type using Gson
+ */
+
 package me.ariy.mydex.data
 
 import androidx.room.TypeConverter

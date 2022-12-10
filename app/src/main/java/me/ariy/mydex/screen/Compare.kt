@@ -1,9 +1,12 @@
+/**
+ * A file that holds multiple JetPack composable component for the Compare
+ * screen
+ */
 package me.ariy.mydex.screen
 
 import android.app.Application
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.rememberScrollState
@@ -25,12 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.kanyidev.searchable_dropdown.SearchableExpandedDropDownMenu
-import kotlinx.coroutines.launch
-import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.pokemon.PokemonEntity
-import me.ariy.mydex.data.pokemon.PokemonRepository
 import me.ariy.mydex.data.pokemon.PokemonViewModel
 import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
 import me.ariy.mydex.ui.theme.Green

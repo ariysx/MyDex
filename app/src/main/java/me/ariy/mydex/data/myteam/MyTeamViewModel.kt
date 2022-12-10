@@ -1,15 +1,17 @@
+/**
+ * ViewModel class to interact with Room using Repository as a constructor by default
+ * Therefore the ViewModel will always be attached to the repository
+ */
+
 package me.ariy.mydex.data.myteam
 
 import android.app.Application
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import me.ariy.mydex.data.AppDatabase
-import me.ariy.mydex.data.pokemon.PokemonEntity
 
 class MyTeamViewModel(application: Application) : AndroidViewModel(application) {
     var team: LiveData<List<MyTeamEntity>>

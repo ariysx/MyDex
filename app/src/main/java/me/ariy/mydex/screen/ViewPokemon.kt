@@ -1,3 +1,8 @@
+/**
+ * Class that holds multiple JetPack composable component for the ViewPokemon
+ * screen
+ */
+
 package me.ariy.mydex.screen
 
 import android.app.Application
@@ -44,7 +49,7 @@ import me.ariy.mydex.data.MapTypeConverter
 import me.ariy.mydex.data.PokemonTypeConverter
 import me.ariy.mydex.data.myteam.MyTeamEntity
 import me.ariy.mydex.data.myteam.MyTeamViewModel
-import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
+import me.ariy.mydex.data.myteam.MyTeamViewModelFactory
 import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.data.pokemon.PokemonViewModel
 import me.ariy.mydex.data.pokemon.PokemonViewModelFactory

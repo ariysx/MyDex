@@ -1,3 +1,8 @@
+/**
+ * Data class that hold Pokemon as an object that can be used for
+ * Room and Other operations
+ */
+
 package me.ariy.mydex.data.pokemon
 
 import androidx.room.ColumnInfo
@@ -7,6 +12,9 @@ import java.io.Serializable
 import java.util.UUID
 import kotlin.random.Random
 
+/*
+Table name called pokemon : Serializable so that it can be passed around easily in bundles
+ */
 @Entity(tableName = "pokemon")
 data class PokemonEntity(
     // UUID will hold primary key of pokemon name in String

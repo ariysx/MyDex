@@ -1,17 +1,19 @@
+/**
+ * Repository with data mangement operation for Pokemon
+ * Repository between Room and ViewModel
+ */
+
 package me.ariy.mydex.data.pokemon
 
 import android.database.sqlite.SQLiteConstraintException
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.Transformations
-import com.google.gson.Gson
-import me.ariy.mydex.data.retrofit.RetrofitAPI
 
 
 class PokemonRepository(private val pokemonDao: PokemonDao) {
 
     var pokemon : LiveData<List<PokemonEntity>> = pokemonDao.getAll()
 
-    suspend fun getAll(){
+    fun getAll(){
         pokemon = pokemonDao.getAll()
     }
 
@@ -36,7 +38,7 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
         return pokemonDao.findByName(name)
     }
 
-    suspend fun countPokemon(): Int {
+    fun countPokemon(): Int {
         return pokemonDao.countPokemon()
     }
 
@@ -44,19 +46,19 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
         pokemonDao.removeAll()
     }
 
-    suspend fun searchType(type: String): List<PokemonEntity> {
+    fun searchType(type: String): List<PokemonEntity> {
         return pokemonDao.searchType(type)
     }
 
-    suspend fun searchName(name: String): List<PokemonEntity> {
+    fun searchName(name: String): List<PokemonEntity> {
         return pokemonDao.searchName(name)
     }
 
-    suspend fun searchLegendary(): List<PokemonEntity> {
+    fun searchLegendary(): List<PokemonEntity> {
         return pokemonDao.searchLegendary()
     }
 
-    suspend fun searchMythical(): List<PokemonEntity> {
+    fun searchMythical(): List<PokemonEntity> {
         return pokemonDao.searchMythical()
     }
 

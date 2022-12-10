@@ -1,3 +1,7 @@
+/**
+ * Room Database Class to instantiate an SQLite service for the application
+ * reference: https://developer.android.com/training/data-storage/room
+ */
 package me.ariy.mydex.data
 
 import android.content.Context
@@ -18,6 +22,13 @@ abstract class AppDatabase : RoomDatabase() {
 
         private var INSTANCE: AppDatabase? = null
 
+        /*
+        Singleton instance of the AppDatabase class. We need this so that
+        our app runs on a new thread for Room
+
+        Additionally creates a temp data so that Room can be initialised
+        on new install
+         */
         fun getInstance(context: Context): AppDatabase {
             synchronized(this) {
                 var instance = INSTANCE

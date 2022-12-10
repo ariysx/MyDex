@@ -1,10 +1,14 @@
-package me.ariy.mydex.data.pokemon
+/**
+ * Factory model to return a new ViewModel instance of MyTeamViewModel
+ * Constructor with application to get context
+ * Reference: https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-factories
+ */
+
+package me.ariy.mydex.data.myteam
 
 import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import me.ariy.mydex.data.myteam.MyTeamViewModel
-import me.ariy.mydex.data.pokemon.PokemonViewModel
 
 class MyTeamViewModelFactory(
     private val application: Application

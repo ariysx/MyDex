@@ -1,9 +1,11 @@
+/**
+ * Repository with data mangement operation for MyTeam
+ * Repository between Room and ViewModel
+ */
+
 package me.ariy.mydex.data.myteam
 
-import android.content.Context
 import androidx.lifecycle.LiveData
-import me.ariy.mydex.data.AppDatabase
-import me.ariy.mydex.data.pokemon.PokemonEntity
 
 class MyTeamRepository(private val myTeamDao: MyTeamDao) {
 

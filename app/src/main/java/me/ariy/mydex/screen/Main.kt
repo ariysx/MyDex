@@ -1,3 +1,8 @@
+/**
+ * Class that holds multiple JetPack composable component for the Main
+ * screen
+ */
+
 package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
@@ -354,6 +359,11 @@ fun MainScreen() {
         }
     }
 }
+
+/**
+ * Composables for Bottom Navigation Bar
+ * reference: https://www.youtube.com/watch?v=gg-KBGH9T8s
+ */
 
 @Composable
 fun BottomBar(navController: NavHostController) {

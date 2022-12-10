@@ -1,3 +1,6 @@
+/**
+ * Lesser ViewModel to handle temporary data for the selected team
+ */
 package me.ariy.mydex.data.myteam
 
 import androidx.compose.runtime.mutableStateListOf

@@ -1,3 +1,7 @@
+/**
+ * Class that holds multiple JetPack composable component for the Bottom navigation bar
+ */
+
 package me.ariy.mydex
 
 import androidx.compose.runtime.Composable
@@ -10,6 +14,9 @@ import me.ariy.mydex.screen.*
 @Composable
 fun BottomBarNavGraph(navController: NavHostController) {
 
+    /*
+    Setting navigation path and composable components attached
+     */
     NavHost(
         navController = navController,
         startDestination = BottomBarScreen.home.route

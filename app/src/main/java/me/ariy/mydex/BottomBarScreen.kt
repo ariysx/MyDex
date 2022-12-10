@@ -1,10 +1,9 @@
-package me.ariy.mydex
+/**
+ * Stores objects of navigation pages including route, title, and icon
+ * for the bottom navigation bar
+ */
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Settings
+package me.ariy.mydex
 
 sealed class BottomBarScreen(
     val route: String,
