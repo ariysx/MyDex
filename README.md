@@ -9,6 +9,11 @@ Run on AVD `API 33`
 
 Note: This project was built on an M1 Machine (ARM) so you might need to change the libraries matching those on x86
 
+## Screenshots
+| [![](https://i.imgur.com/7zsn8kq.png)](https://i.imgur.com/7zsn8kq.png)  |  [![](https://i.imgur.com/JyPcjyc.png)](https://i.imgur.com/JyPcjyc.png) |  [![](https://i.imgur.com/4aRpehx.png)](https://i.imgur.com/4aRpehx.png) |
+| ------------ | ------------ | ------------ |
+| [![](https://i.imgur.com/mBTGxfv.png)](https://i.imgur.com/mBTGxfv.png)  | [![](https://i.imgur.com/Lu2CNR1.png)](https://i.imgur.com/Lu2CNR1.png)  |   |
+
 ## Features
 - Works with no internet connection (Data must be loaded with internet connection first)
 - Easy to navigate User Interface
@@ -35,9 +40,4 @@ Note: This project was built on an M1 Machine (ARM) so you might need to change 
 ## Known Issues
 1. Does not run properly on Native Phone? (This application runs fine on Pixel 3a API 33 arm64)
 2. If you found one, please report the issue by opening a new issue
-
-## Screenshots
-| [![](https://i.imgur.com/7zsn8kq.png)](https://i.imgur.com/7zsn8kq.png)  |  [![](https://i.imgur.com/JyPcjyc.png)](https://i.imgur.com/JyPcjyc.png) |  [![](https://i.imgur.com/4aRpehx.png)](https://i.imgur.com/4aRpehx.png) |
-| ------------ | ------------ | ------------ |
-| [![](https://i.imgur.com/mBTGxfv.png)](https://i.imgur.com/mBTGxfv.png)  | [![](https://i.imgur.com/Lu2CNR1.png)](https://i.imgur.com/Lu2CNR1.png)  |   |
 
