@@ -1,6 +1,5 @@
 package me.ariy.mydex.screen
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.widget.Toast
@@ -17,7 +16,6 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -33,7 +31,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.CachePolicy
@@ -54,26 +51,35 @@ import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
 import me.ariy.mydex.ui.theme.*
 import java.util.*
 
-@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun ViewPokemonScreen(name: String, navController: NavHostController) {
     val context = LocalContext.current
-    val viewModel: PokemonViewModel = viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
-    val pokemon = viewModel.getPokemon(name)
-    println(name)
-    if(pokemon.uuid.isNotEmpty()){
-        println(pokemon.toString())
-        Screen(viewModel, context, navController, name)
+    val viewModel: PokemonViewModel =
+        viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
+    val observePokemon = viewModel.pokemon.observeAsState().value
+    val pokemon = observePokemon?.find { it.uuid == name }
+    if (pokemon != null) {
+        if(pokemon.uuid.isNotEmpty()){
+            Screen(viewModel, context, navController, pokemon, observePokemon)
+        }
     }
+
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHostController, name: String) {
-    val pokemonEntity by remember { mutableStateOf(viewModel.getPokemon(name)) }
-    if(pokemonEntity.uuid.isEmpty()){
-        return
-    }
+fun Screen(
+    viewModel: PokemonViewModel,
+    context: Context,
+    navController: NavHostController,
+    pokemon: PokemonEntity,
+    observePokemon: List<PokemonEntity>
+) {
+//    if(pokemonEntity.uuid.isEmpty()){
+//        return
+//    }
+
+    val pokemonEntity = pokemon
 
     val baseStats = MapTypeConverter.stringToMapInt(pokemonEntity.baseStats)
 
@@ -169,13 +175,19 @@ fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHost
                         Column(
                             modifier = Modifier.padding(25.dp, 0.dp)
                         ) {
-                            Text(text = pokemonEntity.height.toString() + " M", textAlign = TextAlign.Center)
+                            Text(
+                                text = pokemonEntity.height.toString() + " M",
+                                textAlign = TextAlign.Center
+                            )
                             Text(text = "Height", textAlign = TextAlign.Center)
                         }
                         Column(
                             modifier = Modifier.padding(25.dp, 0.dp)
                         ) {
-                            Text(text = pokemonEntity.weight.toString() + " KG", textAlign = TextAlign.Center)
+                            Text(
+                                text = pokemonEntity.weight.toString() + " KG",
+                                textAlign = TextAlign.Center
+                            )
                             Text(text = "Weight", textAlign = TextAlign.Center)
                         }
                     }
@@ -183,10 +195,10 @@ fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHost
                     MyTeamDropdown(pokemonEntity)
 
                     Text(text = "Evolutions", style = MaterialTheme.typography.h6)
-                    Box (
+                    Box(
                         contentAlignment = Center
                     ) {
-                        if(pokemonEntity.nextEvolution.isNotEmpty()){
+                        if (pokemonEntity.nextEvolution.isNotEmpty()) {
 //                        if(pokemonEntity != null || pokemonEntity.nextEvolution != null || pokemonEntity.nextEvolution.isNotEmpty()){
 
                             FlowRow(
@@ -194,7 +206,8 @@ fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHost
                                     .fillMaxWidth()
                                     .padding(8.dp),
                             ) {
-                                val nextEvoList = ListTypeConverter.stringToList(pokemonEntity.nextEvolution!!)
+                                val nextEvoList =
+                                    ListTypeConverter.stringToList(pokemonEntity.nextEvolution!!)
                                 if (nextEvoList.isNotEmpty() && nextEvoList.size != 1) {
                                     for (nextEvo in nextEvoList) {
                                         Card(
@@ -206,7 +219,8 @@ fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHost
                                                             newValue = nextEvo
                                                         )
                                                 )
-                                            }, modifier = Modifier
+                                            },
+                                            modifier = Modifier
                                                 .background(Color.Transparent)
                                                 .padding(4.dp)
                                                 .wrapContentSize(Alignment.Center),
@@ -217,14 +231,17 @@ fun Screen(viewModel: PokemonViewModel, context: Context, navController: NavHost
                                                 verticalArrangement = Arrangement.Center,
                                                 horizontalAlignment = Alignment.CenterHorizontally
                                             ) {
-                                                Box(contentAlignment = Alignment.Center){
-                                                    if(viewModel.getPokemon(nextEvo) != null){
-                                                        Thumbnail(
-                                                            thumbnail = viewModel.getPokemon(nextEvo).thumbnail,
-                                                        )
+                                                Box(contentAlignment = Alignment.Center) {
+                                                    val nextEvoPokemon = observePokemon.find {it.uuid == nextEvo}
+                                                    if (nextEvoPokemon != null) {
+                                                        if (nextEvoPokemon.uuid.isNotEmpty()) {
+                                                            Thumbnail(
+                                                                thumbnail = nextEvoPokemon.thumbnail,
+                                                            )
+                                                        }
                                                     }
                                                 }
-                                                Box(contentAlignment = Center){
+                                                Box(contentAlignment = Center) {
                                                     Text(text = nextEvo.replaceFirstChar {
                                                         if (it.isLowerCase()) it.titlecase(
                                                             Locale.ROOT
@@ -475,8 +492,9 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
     var expanded by remember { mutableStateOf(false) }
     val items = remember { mutableStateListOf<String>() }
     val context = LocalContext.current
-    
-    val teamViewModel: MyTeamViewModel = viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
+
+    val teamViewModel: MyTeamViewModel =
+        viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
     val teams = teamViewModel.team.observeAsState(listOf()).value
     print(teams.size)
     if (items.size < teams.size) {
@@ -512,11 +530,15 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                 shape = RoundedCornerShape(50)
             ) {
                 Icon(imageVector = Icons.Default.Add, contentDescription = "Add Icon")
-                Text("Add ${pokemonEntity.uuid.replaceFirstChar {
-                    if (it.isLowerCase()) it.titlecase(
-                        Locale.getDefault()
-                    ) else it.toString()
-                }} To MyTeam")
+                Text(
+                    "Add ${
+                        pokemonEntity.uuid.replaceFirstChar {
+                            if (it.isLowerCase()) it.titlecase(
+                                Locale.getDefault()
+                            ) else it.toString()
+                        }
+                    } To MyTeam"
+                )
             }
         }
 
@@ -557,7 +579,7 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                         IconButton(
                             modifier = Modifier.alpha(ContentAlpha.medium),
                             onClick = {
-                                if(text.isEmpty()){
+                                if (text.isEmpty()) {
                                     return@IconButton
                                 }
                                 items.add(text)
@@ -579,8 +601,7 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                     val pokemon = ArrayList<PokemonEntity>()
 
                     var pokemons: List<String> = emptyList()
-
-                    val team = teamViewModel.findByName(s)
+                    val team = teams.find { it.name == s }
 
                     if (team != null && team.pokemon.isNotEmpty()) {
                         pokemons = ListTypeConverter.stringToList(team.pokemon)
@@ -600,8 +621,12 @@ fun MyTeamDropdown(pokemonEntity: PokemonEntity) {
                         for (i in pokemon.indices) {
                             pokemonString.add(PokemonTypeConverter.pokemonEntityToString(pokemon[i]))
                         }
-                        team.pokemon = ListTypeConverter.listToString(pokemonString)
-                        teamViewModel.updateTeam(team)
+                        if (team != null) {
+                            team.pokemon = ListTypeConverter.listToString(pokemonString)
+                        }
+                        if (team != null) {
+                            teamViewModel.updateTeam(team)
+                        }
                         openDialogSuccess = true
                     }
 

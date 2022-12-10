@@ -1,27 +1,31 @@
 package me.ariy.mydex.data.pokemon
 
 import android.app.Application
-import android.database.sqlite.SQLiteConstraintException
-import androidx.lifecycle.*
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import me.ariy.mydex.data.AppDatabase
 import me.ariy.mydex.data.ListTypeConverter
 import me.ariy.mydex.data.MapTypeConverter
-import me.ariy.mydex.data.pokemon.entity.evolutions.EvolutionsData
-import me.ariy.mydex.data.pokemon.entity.pokeAPI.PokeData
-import me.ariy.mydex.data.pokemon.entity.pokemon.PokemonData
-import me.ariy.mydex.data.pokemon.entity.species.SpeciesData
 import me.ariy.mydex.data.retrofit.RetrofitAPI
-import retrofit2.*
+import retrofit2.HttpException
 import java.io.IOException
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
+import kotlin.collections.List
+import kotlin.collections.emptyList
+import kotlin.collections.find
+import kotlin.collections.forEach
+import kotlin.collections.set
 
 class PokemonViewModel(application: Application) : AndroidViewModel(application) {
 
     var pokemon: LiveData<List<PokemonEntity>>
     private val repository: PokemonRepository
+    var isSyncing = false
 
     init {
         val pokemonDao = AppDatabase.getInstance(application).pokemonDao()
@@ -31,7 +35,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
 
     fun addPokemon(pokemonEntity: PokemonEntity) {
         viewModelScope.launch(Dispatchers.IO) {
-            println("[SyncCloud] Adding ${pokemonEntity.uuid} ")
+//            println("[SyncCloud] Adding ${pokemonEntity.uuid} ")
             repository.addPokemon(pokemonEntity)
         }
     }
@@ -49,12 +53,25 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun getPokemon(name: String): PokemonEntity {
-        var pokemon = PokemonEntity()
+        var pokemon: PokemonEntity = PokemonEntity()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.getPokemon(name)
+//            println("[!] Getting ${response.uuid}")
             pokemon = response
         }
+        println(pokemon.toString())
         return pokemon
+    }
+
+    suspend fun getPokemonWithCoroutine(name: String) : PokemonEntity {
+        val response = withContext(Dispatchers.IO){
+            repository.getPokemon(name)
+        }
+
+        if(response.uuid.isNotEmpty()){
+            return response
+        }
+        return PokemonEntity()
     }
 
     fun countPokemon(): Int {
@@ -136,15 +153,24 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
     //    private val lock = Mutex()
     fun syncCloud() {
 //        lock.withLock {
-        println("Hello? Am I running?")
+//        if(isSyncing){
+//            println("Already Syncing")
+//            return
+//        }
+//        isSyncing = true
         viewModelScope.launch {
             val retrofitAPI = RetrofitAPI.create()
             val pokeData = retrofitAPI.getPokemonFromCloud()
             println("[CloudSync] Pokemon Count: " + pokeData.count)
+
             try {
 
                 for (i in 0 until pokeData.results.size) {
-                    println("[CloudSync] Pokemon: ${pokeData.results[i].name} | URL: ${pokeData.results[i].url}")
+//                    val localPokemon = getPokemon(pokeData.results[i].name)
+//                    if (localPokemon != null && localPokemon.uuid.isNotEmpty()) {
+//                        continue
+//                    }
+//                    println("[CloudSync] Pokemon: ${pokeData.results[i].name} | URL: ${pokeData.results[i].url}")
 
 
                     val speciesData = retrofitAPI.getPokemonSpecies(pokeData.results[i].url)
@@ -208,9 +234,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                             pokemonEntity.nextEvolution = ""
                         }
                     }
-                    if( getPokemon(pokemonEntity.uuid) != null){
-                        addPokemon(pokemonEntity)
-                    }
+                    addPokemon(pokemonEntity)
                 }
             } catch (e: IOException) {
                 println(e.stackTraceToString())
@@ -219,6 +243,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
             } catch (e: Exception){
                 println(e.stackTraceToString())
             }
+//            isSyncing = false
         }
     }
 }

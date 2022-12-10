@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
@@ -47,10 +48,11 @@ fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: S
     val teamDB: MyTeamViewModel =
         viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
 
-    val myteam = teamDB.findById(team)
+    val teams = teamDB.team.observeAsState(listOf()).value
+    val myteam = teams.find { it.uuid == team }
     var pokemonEntity: PokemonEntity? = null
 
-    if(myteam.pokemon == null){
+    if (myteam == null) {
         return
     }
 
@@ -171,8 +173,12 @@ fun ViewTeamEditPokemonScreen(navController: NavController, team: String, uid: S
                                 )
                             }
 
-                            myteam.pokemon = ListTypeConverter.listToString(pokemonString)
-                            teamDB.updateTeam(myteam)
+                            if (myteam != null) {
+                                myteam.pokemon = ListTypeConverter.listToString(pokemonString)
+                            }
+                            if (myteam != null) {
+                                teamDB.updateTeam(myteam)
+                            }
 
 
                         },

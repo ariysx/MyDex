@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
@@ -48,11 +49,15 @@ fun ViewTeamScreen(
     val context = LocalContext.current
     val teamViewModel: MyTeamViewModel =
         viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
-    val team = teamViewModel.findById(name)
+    val teams = teamViewModel.team.observeAsState(listOf()).value
+    println(name)
+    val team = teams.find { it.uuid == name }
 
     val myTeamPokemonViewModel: MyTeamPokemonViewModel = viewModel()
     println(team)
-    ViewTeam(teamViewModel = teamViewModel, team, navController, myTeamPokemonViewModel)
+    if (team != null) {
+        ViewTeam(teamViewModel = teamViewModel, team, navController, myTeamPokemonViewModel)
+    }
 
 }
 

@@ -60,6 +60,8 @@ import okhttp3.internal.applyConnectionSpec
 import java.util.*
 import kotlin.concurrent.thread
 
+var isSyncing = false
+
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnrememberedMutableState")
 @Composable
 fun MyDexApp(
@@ -70,13 +72,17 @@ fun MyDexApp(
         viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
 //    viewModel.syncCloud()
 
-    thread {
+    if(!isSyncing){
+        isSyncing = true
+        thread {
 //        val count = AppDatabase.getInstance(context.applicationContext).pokemonDao().countPokemon()
 //        if (count == 0) {
             println("[CloudSync] Initialising...")
             viewModel.syncCloud()
 //        }
+        }
     }
+
     viewModel.pokemon.value?.sortedBy { it.pokedexID }
 
     val items = viewModel.pokemon.observeAsState(listOf()).value

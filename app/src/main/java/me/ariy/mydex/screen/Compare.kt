@@ -62,7 +62,7 @@ fun CompareScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth().padding(0.dp, 2.dp, ),
                 onDropDownItemSelected = { item -> // Returns the item selected in the dropdown
                     Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
-                    pokemon1.value = viewModel.getPokemon(item)
+                    pokemon1.value = items.find { it.uuid == item }!!
                 },
                 enable = false,
                 placeholder = "Select a pokemon",
@@ -79,7 +79,7 @@ fun CompareScreen(navController: NavHostController) {
                 modifier = Modifier.fillMaxWidth().padding(0.dp, 2.dp),
                 onDropDownItemSelected = { item -> // Returns the item selected in the dropdown
                     Toast.makeText(context, item, Toast.LENGTH_SHORT).show()
-                    pokemon2.value = viewModel.getPokemon(item)
+                    pokemon2.value = items.find { it.uuid == item }!!
                 },
                 enable = false,
                 placeholder = "Select a pokemon",

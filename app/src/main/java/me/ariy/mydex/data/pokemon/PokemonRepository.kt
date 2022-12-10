@@ -18,8 +18,9 @@ class PokemonRepository(private val pokemonDao: PokemonDao) {
     suspend fun addPokemon(pokemonEntity: PokemonEntity){
         try {
             pokemonDao.insert(pokemonEntity)
+            println("[CloudSync] Adding ${pokemonEntity.uuid} ")
         } catch (e: SQLiteConstraintException) {
-            println("Error adding Pokemon - ${pokemonEntity.uuid}")
+//            println("Error adding Pokemon - ${pokemonEntity.uuid}")
         }
     }
 

@@ -1,25 +1,21 @@
 package me.ariy.mydex.screen
 
 import android.app.Application
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.delay
 import me.ariy.mydex.data.myteam.MyTeamViewModel
 import me.ariy.mydex.data.pokemon.MyTeamViewModelFactory
+import me.ariy.mydex.data.pokemon.PokemonEntity
 import me.ariy.mydex.data.pokemon.PokemonViewModel
 import me.ariy.mydex.data.pokemon.PokemonViewModelFactory
 import java.util.*
@@ -33,9 +29,20 @@ fun Statistic(
     val pDB: PokemonViewModel = viewModel(factory = PokemonViewModelFactory(context.applicationContext as Application))
     val mDB: MyTeamViewModel = viewModel(factory = MyTeamViewModelFactory(context.applicationContext as Application))
 
-    val countLocalPokemon by remember { mutableStateOf( pDB.countPokemon())}
-    val countLegendary by remember { mutableStateOf(pDB.searchLegendary().size) }
-    val countMythical by remember { mutableStateOf( pDB.searchMythical().size)}
+    val pVM = pDB.pokemon.observeAsState(listOf()).value
+    val countLocalPokemon = pVM.size
+    var countLegendary = 0
+    pVM.forEach {
+        if(it.isLegendary){
+            countLegendary++
+        }
+    }
+    var countMythical = 0
+    pVM.forEach {
+        if(it.isMythical){
+            countMythical++
+        }
+    }
 //    val countMyTeam by remember { mutableStateOf( mDB.team.value?.size)}
 
     val types = listOf(
@@ -70,14 +77,20 @@ fun Statistic(
             StatsBar(text = "Mythical Pokemon: $countMythical", value = countMythical * 0.001f, color = MaterialTheme.colors.primary)
             Text(text = "Types", style = MaterialTheme.typography.h6)
             types.forEach {
-                getTypeCount(pDB = pDB, s = it)
+                getTypeCount(pDB = pDB, s = it, pVM)
             }
         }
     }
 }
 
 @Composable
-fun getTypeCount(pDB: PokemonViewModel, s: String) {
-    val count = pDB.countByType(s.lowercase(Locale.ROOT))
+fun getTypeCount(pDB: PokemonViewModel, s: String, pVM: List<PokemonEntity>) {
+
+    var count = 0
+    pVM.forEach {
+        if(it.type.contains(s.lowercase())){
+            count++
+        }
+    }
     StatsBar(text = "$s Pokemon: $count", value = count * 0.001f, color = getTypeColor(text = s.lowercase()))
 }
