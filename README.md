@@ -38,6 +38,5 @@ Note: This project was built on an M1 Machine (ARM) so you might need to change 
 - Toast
 
 ## Known Issues
-1. Does not run properly on Native Phone? (This application runs fine on Pixel 3a API 33 arm64)
-2. If you found one, please report the issue by opening a new issue
+1. If you found one, please report the issue by opening a new issue
 
