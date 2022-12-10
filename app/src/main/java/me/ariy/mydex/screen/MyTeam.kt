@@ -125,7 +125,6 @@ fun MyTeamAddBar(
                 Text(
                     modifier = Modifier.alpha(ContentAlpha.medium),
                     text = "Insert team name",
-                    color = Color.Black
                 )
             },
 //            textStyle =

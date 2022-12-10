@@ -302,7 +302,6 @@ fun SearchBarApp(
                 Text(
                     modifier = Modifier.alpha(ContentAlpha.medium),
                     text = "Search Pokemon, Type",
-                    color = Color.Black
                 )
             },
 //            textStyle =
