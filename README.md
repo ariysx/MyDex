@@ -37,9 +37,7 @@ Note: This project was built on an M1 Machine (ARM) so you might need to change 
 2. If you found one, please report the issue by opening a new issue
 
 ## Screenshots
-[![](https://i.imgur.com/7zsn8kq.png)](https://i.imgur.com/7zsn8kq.png)
-[![](https://i.imgur.com/JyPcjyc.png)](https://i.imgur.com/JyPcjyc.png)
-[![](https://i.imgur.com/4aRpehx.png)](https://i.imgur.com/4aRpehx.png)
-[![](https://i.imgur.com/mBTGxfv.png)](https://i.imgur.com/mBTGxfv.png)
-[![](https://i.imgur.com/Lu2CNR1.png)](https://i.imgur.com/Lu2CNR1.png)
+| [![](https://i.imgur.com/7zsn8kq.png)](https://i.imgur.com/7zsn8kq.png)  |  [![](https://i.imgur.com/JyPcjyc.png)](https://i.imgur.com/JyPcjyc.png) |  [![](https://i.imgur.com/4aRpehx.png)](https://i.imgur.com/4aRpehx.png) |
+| ------------ | ------------ | ------------ |
+| [![](https://i.imgur.com/mBTGxfv.png)](https://i.imgur.com/mBTGxfv.png)  | [![](https://i.imgur.com/Lu2CNR1.png)](https://i.imgur.com/Lu2CNR1.png)  |   |
 
