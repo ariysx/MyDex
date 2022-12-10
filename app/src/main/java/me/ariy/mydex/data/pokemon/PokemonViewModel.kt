@@ -138,21 +138,12 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
 //        lock.withLock {
         println("Hello? Am I running?")
         viewModelScope.launch {
+            val retrofitAPI = RetrofitAPI.create()
+            val pokeData = retrofitAPI.getPokemonFromCloud()
+            println("[CloudSync] Pokemon Count: " + pokeData.count)
             try {
-                val retrofitAPI = RetrofitAPI.create()
-                val pokeData = retrofitAPI.getPokemonFromCloud()
-
-                println("[CloudSync] Pokemon Count: " + pokeData.count)
 
                 for (i in 0 until pokeData.results.size) {
-//                    if(pokemon.value != null && pokeData.count == (pokemon.value?.size?.plus(1))){
-//                        break
-//                    }
-
-                    if (getPokemon(pokeData.results[i].name) != null) {
-                        continue
-                    }
-
                     println("[CloudSync] Pokemon: ${pokeData.results[i].name} | URL: ${pokeData.results[i].url}")
 
 
