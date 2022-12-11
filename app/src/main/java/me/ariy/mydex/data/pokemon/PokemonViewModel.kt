@@ -5,6 +5,7 @@
 package me.ariy.mydex.data.pokemon
 
 import android.app.Application
+import android.net.ConnectivityManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.viewModelScope
@@ -71,12 +72,12 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
         return pokemon
     }
 
-    suspend fun getPokemonWithCoroutine(name: String) : PokemonEntity {
-        val response = withContext(Dispatchers.IO){
+    suspend fun getPokemonWithCoroutine(name: String): PokemonEntity {
+        val response = withContext(Dispatchers.IO) {
             repository.getPokemon(name)
         }
 
-        if(response.uuid.isNotEmpty()){
+        if (response.uuid.isNotEmpty()) {
             return response
         }
         return PokemonEntity()
@@ -101,7 +102,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
         }
     }
 
-    fun searchByName(s: String) : List<PokemonEntity> {
+    fun searchByName(s: String): List<PokemonEntity> {
         var pokemon: List<PokemonEntity> = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.searchName(s)
@@ -110,7 +111,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
         return pokemon
     }
 
-    fun searchByType(s: String) : List<PokemonEntity> {
+    fun searchByType(s: String): List<PokemonEntity> {
         var pokemon: List<PokemonEntity> = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.searchType(s)
@@ -119,14 +120,14 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
         return pokemon
     }
 
-    fun getAll(){
+    fun getAll() {
         viewModelScope.launch(Dispatchers.IO) {
             repository.getAll()
             pokemon = repository.pokemon
         }
     }
 
-    fun searchLegendary() : List<PokemonEntity> {
+    fun searchLegendary(): List<PokemonEntity> {
         var pokemon: List<PokemonEntity> = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.searchLegendary()
@@ -135,7 +136,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
         return pokemon
     }
 
-    fun searchMythical() : List<PokemonEntity> {
+    fun searchMythical(): List<PokemonEntity> {
         var pokemon: List<PokemonEntity> = emptyList()
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.searchMythical()
@@ -144,7 +145,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
         return pokemon
     }
 
-    fun countByType(type: String) : Int {
+    fun countByType(type: String): Int {
         var count = 0
         viewModelScope.launch(Dispatchers.IO) {
             val response = repository.countByType(type)
@@ -195,7 +196,8 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                     val description = speciesData.flavor_text_entries.find {
                         it.language.name == "en"
                     }
-                    pokemonEntity.description = description?.flavor_text?.replace("\n", "").toString()
+                    pokemonEntity.description =
+                        description?.flavor_text?.replace("\n", "").toString()
                     pokemonEntity.height = ((pokemonData.height.toDouble() / 10))
                     pokemonEntity.weight = ((pokemonData.weight.toDouble() / 10))
                     pokemonEntity.isLegendary = speciesData.is_legendary
@@ -219,7 +221,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                     pokemonEntity.baseStats = MapTypeConverter.mapToString(baseStats)
                     pokemonEntity.pokedexID = speciesData.id
 
-                    if(speciesData != null || speciesData.evolution_chain != null){
+                    if (speciesData != null || speciesData.evolution_chain != null) {
                         try {
                             val evolutionsData =
                                 retrofitAPI.getPokemonEvolutions(speciesData.evolution_chain.url)
@@ -233,7 +235,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
 //                            println("[Evolution Tree] ${it.species.name}")
                                     evolutionTree.add(it.species.name)
                                     // Third evolution
-                                    if(it.evolves_to != null){
+                                    if (it.evolves_to != null) {
                                         it.evolves_to.forEach {
                                             evolutionTree.add(it.species.name)
                                         }
@@ -241,9 +243,10 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                                 }
                             }
 //                    println("[EvolutionTree] ${evolutionTree}")
-                            pokemonEntity.nextEvolution = ListTypeConverter.listToString(evolutionTree)
+                            pokemonEntity.nextEvolution =
+                                ListTypeConverter.listToString(evolutionTree)
 
-                        } catch (e: java.lang.NullPointerException){
+                        } catch (e: java.lang.NullPointerException) {
                             pokemonEntity.nextEvolution = ""
                         }
                     }
@@ -253,7 +256,7 @@ class PokemonViewModel(application: Application) : AndroidViewModel(application)
                 println(e.stackTraceToString())
             } catch (e: HttpException) {
                 println(e.stackTraceToString())
-            } catch (e: Exception){
+            } catch (e: Exception) {
                 println(e.stackTraceToString())
             }
 //            isSyncing = false

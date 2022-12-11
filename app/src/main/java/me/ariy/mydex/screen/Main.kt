@@ -7,6 +7,10 @@ package me.ariy.mydex.screen
 
 import android.annotation.SuppressLint
 import android.app.Application
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -67,6 +71,30 @@ import kotlin.concurrent.thread
 
 var isSyncing = false
 
+/**
+ * Get network status, if offline then don't sync cloud to prevent crash with Retrofit
+ * Reference: https://stackoverflow.com/questions/51141970/check-internet-connectivity-android-in-kotlin
+ */
+fun isOnline(context: Context): Boolean {
+    val connectivityManager =
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    val capabilities =
+        connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+    if (capabilities != null) {
+        if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+            Log.i("Internet", "NetworkCapabilities.TRANSPORT_CELLULAR")
+            return true
+        } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+            Log.i("Internet", "NetworkCapabilities.TRANSPORT_WIFI")
+            return true
+        } else if (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)) {
+            Log.i("Internet", "NetworkCapabilities.TRANSPORT_ETHERNET")
+            return true
+        }
+    }
+    return false
+}
+
 @SuppressLint("UnusedMaterialScaffoldPaddingParameter", "UnrememberedMutableState")
 @Composable
 fun MyDexApp(
@@ -82,8 +110,13 @@ fun MyDexApp(
         thread {
 //        val count = AppDatabase.getInstance(context.applicationContext).pokemonDao().countPokemon()
 //        if (count == 0) {
-            println("[CloudSync] Initialising...")
-            viewModel.syncCloud()
+
+
+            if(isOnline(context)){
+                println("[CloudSync] Initialising...")
+                viewModel.syncCloud()
+            }
+            println("[CloudSync] No network...")
 //        }
         }
     }
